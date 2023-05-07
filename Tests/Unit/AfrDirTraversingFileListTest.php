@@ -1,0 +1,48 @@
+<?php
+declare(strict_types=1);
+
+namespace Unit;
+
+use Autoframe\Components\FileSystem\DirPath\AfrDirPathClass;
+use Autoframe\Components\FileSystem\Traversing\AfrDirTraversingFileListTrait;
+use Autoframe\Components\FileSystem\Traversing\AfrDirTraversingFileListClass;
+use PHPUnit\Framework\TestCase;
+
+class AfrDirTraversingFileListTest extends TestCase
+{
+    function getDirFileListDataProvider(): array
+    {
+        echo __CLASS__ . '->' . __FUNCTION__ . PHP_EOL;
+        $d1 = __DIR__ . DIRECTORY_SEPARATOR . '../../';
+        $d2 = __DIR__ . DIRECTORY_SEPARATOR . '../../vendor/composer/';
+        $oDirPath = new AfrDirPathClass();
+        return [
+            [$d1, [], $oDirPath, function ($aFiles) {
+                return in_array('composer.json', $aFiles);
+            }],
+            [$d1, ['md'], null, function ($aFiles) {
+                return in_array('README.md', $aFiles);
+            }],
+            [$d2, ['json', 'php'], $oDirPath, function ($aFiles) {
+                return in_array('autoload_classmap.php', $aFiles) && in_array('installed.json', $aFiles);
+            }],
+            [$d2, [''], null, function ($aFiles) {
+                return in_array('LICENSE', $aFiles);
+            }],
+        ];
+    }
+
+    /**
+     * @test
+     * @dataProvider getDirFileListDataProvider
+     */
+    public function getDirFileListTest(string $sPath, array $aExtFilter, $mDirPath, $Fx): void
+    {
+        $oClass = new AfrDirTraversingFileListClass();
+        $aFiles = $oClass->getDirFileList($sPath, $aExtFilter, $mDirPath);
+        $this->assertEquals(true, $Fx($aFiles), print_r($aFiles, true));
+
+    }
+
+
+}
