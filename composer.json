@@ -1,7 +1,7 @@
 {
     "type": "library",
     "name": "autoframe/components-filesystem",
-    "description": "Core ssssssssssssss Utils Autoframe Framework",
+    "description": "Core File System Utils Autoframe Framework",
     "license": "MIT",
     "homepage": "https://github.com/autoframe",
     "require": {
@@ -17,7 +17,7 @@
             "role": "Developer"
         }
     ],
-    "keywords": ["File System", " Looping", "Traversing", "Versioning", "Encode", "Base64", "Mime" ],
+    "keywords": ["File System", "Looping", "Traversing", "Versioning", "Encode", "Base64", "Mime" ],
     "autoload": {
         "psr-4": {
             "Autoframe\\Components\\FileSystem\\": "src/"

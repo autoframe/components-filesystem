@@ -3,7 +3,7 @@
 <!--   ./vendor/bin/phpunit   -->
 <phpunit colors="true" bootstrap="vendor/autoload.php">
     <testsuites>
-        <testsuite name="Autoframe SSSSSSSSSSSSSS Components">
+        <testsuite name="Autoframe File System Components">
             <directory>./Tests/Unit</directory>
         </testsuite>
     </testsuites>

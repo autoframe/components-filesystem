@@ -3,7 +3,8 @@ declare(strict_types=1);
 
 namespace Autoframe\Components\FileSystem\Versioning;
 
-use Autoframe\Components\FileSystem\DirPath\AfrDirPathTrait;
+use Autoframe\Components\FileSystem\DirPath\AfrDirPathInterface;
+use Autoframe\Components\FileSystem\DirPath\AfrDirPathClass;
 use Autoframe\Components\FileSystem\DirPath\Exception\AfrFileSystemDirPathException;
 use Autoframe\Components\FileSystem\Versioning\Exception\AfrFileSystemVersioningException;
 
@@ -20,7 +21,9 @@ use function gettype;
 
 trait AfrDirMaxFileMtimeTrait
 {
-    use AfrDirPathTrait;
+    /** @var AfrDirPathInterface  */
+    public static AfrDirPathInterface $AfrDirPathInstance; //TODO workround singleton static dependncy injector hard / soft
+    //todo cred ca fac pt interfata ceva call general
 
     /**
      * @param string|array $pathStringOrPathsArray
@@ -42,6 +45,9 @@ trait AfrDirMaxFileMtimeTrait
             return 0;
         }
         $iMaxTimestamp = 0;
+        if(empty(self::$AfrDirPathInstance)){
+            self::$AfrDirPathInstance = new AfrDirPathClass();
+        }
 
         if (is_array($pathStringOrPathsArray)) {
             foreach ($pathStringOrPathsArray as $sDirPath) {
@@ -69,8 +75,8 @@ trait AfrDirMaxFileMtimeTrait
             );
 
             if ($sPathType === 'dir') {
-                $sPath = $this->correctPathFormat($sPath, true, true);
-                $rDir = $this->openDir($sPath);
+                $sPath = self::$AfrDirPathInstance->correctPathFormat($sPath, true, true);
+                $rDir = self::$AfrDirPathInstance->openDir($sPath);
                 while ($sEntryName = readdir($rDir)) {
                     if ($sEntryName === '.' || $sEntryName === '..') {
                         continue;

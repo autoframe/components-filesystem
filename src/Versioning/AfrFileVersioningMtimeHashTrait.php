@@ -6,6 +6,7 @@ namespace Autoframe\Components\FileSystem\Versioning;
 use Autoframe\Components\FileSystem\Versioning\Exception\AfrFileSystemVersioningException;
 
 use function rtrim;
+use function is_file;
 use function filemtime;
 use function strtoupper;
 use function dechex;

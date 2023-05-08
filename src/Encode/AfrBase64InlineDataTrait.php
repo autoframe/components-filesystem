@@ -4,6 +4,9 @@ declare(strict_types=1);
 namespace Autoframe\Components\FileSystem\Encode;
 
 use Autoframe\Components\FileMime\AfrFileMimeClass;
+use function base64_encode;
+use function file_get_contents;
+
 
 trait AfrBase64InlineDataTrait
 {
@@ -15,7 +18,6 @@ trait AfrBase64InlineDataTrait
      */
     public function getBase64InlineData(string $sFullImagePath): string
     {
-
         $sMime = (new AfrFileMimeClass())->getMimeFromFileName($sFullImagePath);
         return 'data:' . $sMime. ';base64,' . base64_encode(file_get_contents($sFullImagePath));
     }

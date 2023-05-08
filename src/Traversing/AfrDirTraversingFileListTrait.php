@@ -19,9 +19,9 @@ use function closedir;
 
 trait AfrDirTraversingFileListTrait
 {
+    use AfrDirTraversingDependency;
 
     /**
-     *
      * @param string $sDirPath absolute or relative path
      * @param array $aFilterExtensions ['jpg','php',''] filter images, scripts and file without extension
      * @return array|false
@@ -29,20 +29,15 @@ trait AfrDirTraversingFileListTrait
      */
     public function getDirFileList(
         string               $sDirPath,
-        array                $aFilterExtensions = [],
-        ?AfrDirPathInterface $oDir = null
+        array                $aFilterExtensions = []
     )
     {
-        if (!$oDir instanceof AfrDirPathInterface) {
-            $oDir = new AfrDirPathClass();
-        }
-
-        if (!$oDir->isDir($sDirPath) || !$rDir = $oDir->openDir($sDirPath)) {
+        if (!self::$AfrDirPathInstance->isDir($sDirPath) || !$rDir = self::$AfrDirPathInstance->openDir($sDirPath)) {
             return false;
         }
 
         $aFiles = [];
-        $sDirPath = $oDir->addFinalSlash($sDirPath);
+        $sDirPath = self::$AfrDirPathInstance->addFinalSlash($sDirPath);
         foreach ($aFilterExtensions as &$sFilter) {
             $sFilter = '.' . ltrim(strtolower($sFilter), '.');
         }
@@ -58,8 +53,6 @@ trait AfrDirTraversingFileListTrait
             }
         }
         closedir($rDir);
-
-        //$this->applyAfrDirTraversingSortMethod($aFiles, false);
         sort($aFiles, SORT_NATURAL);
 
         return $aFiles;

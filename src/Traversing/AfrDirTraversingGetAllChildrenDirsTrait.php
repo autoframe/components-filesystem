@@ -15,8 +15,7 @@ use function filetype;
 
 trait AfrDirTraversingGetAllChildrenDirsTrait
 {
-    /** @var AfrDirPathInterface  */
-    public static AfrDirPathInterface $AfrDirPathInstance;
+    use AfrDirTraversingDependency;
 
     /**
      * @param string $sDirPath
@@ -40,10 +39,6 @@ trait AfrDirTraversingGetAllChildrenDirsTrait
         }
         if ($iMaxLevels <= $iCurrentLevel) {
             return false;
-        }
-
-        if(empty(self::$AfrDirPathInstance)){
-            self::$AfrDirPathInstance = new AfrDirPathClass();
         }
 
         if ($iCurrentLevel === 0) {
@@ -95,9 +90,7 @@ trait AfrDirTraversingGetAllChildrenDirsTrait
                 );
             }
         }
-        //$this->applyAfrDirTraversingSortMethod($aDirs, true);
         ksort($aDirs,SORT_NATURAL);
-
         return $aDirs;
     }
 

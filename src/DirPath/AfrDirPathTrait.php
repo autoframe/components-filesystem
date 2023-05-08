@@ -4,6 +4,21 @@ declare(strict_types=1);
 namespace Autoframe\Components\FileSystem\DirPath;
 
 use Autoframe\Components\FileSystem\DirPath\Exception\AfrFileSystemDirPathException;
+use function filetype;
+use function opendir;
+use function substr;
+use function substr_count;
+use function in_array;
+use function rtrim;
+use function array_diff;
+use function count;
+use function strpos;
+use function array_fill;
+use function str_replace;
+use function array_filter;
+use function explode;
+use function array_pop;
+use function implode;
 
 trait AfrDirPathTrait
 {
@@ -201,6 +216,5 @@ trait AfrDirPathTrait
         }
         return implode($sDs, $aAbsolutes);
     }
-
 
 }
