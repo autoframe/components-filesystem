@@ -31,14 +31,6 @@ interface AfrDirPathInterface
     public function detectDirectorySeparatorFromPath(string $sDirPath): string;
 
     /**
-     * Validate or detect a slash style from a dir path
-     * @param string $sDirPath
-     * @param string $sSlashStyleFormat
-     * @return string
-     */
-    public function getApplicableSlashStyle(string $sDirPath, string $sSlashStyleFormat = ''): string;
-
-    /**
      * Remove final slash from a directory path
      * @param string $sDirPath
      * @return string
@@ -65,10 +57,9 @@ interface AfrDirPathInterface
      * @param string $sDirPath
      * @param bool $bWithFinalSlash
      * @param bool $bCorrectSlashStyle
-     * @param string $sSlashStyle
      * @return string
      */
-    public function correctPathFormat(string $sDirPath, bool $bWithFinalSlash = false, bool $bCorrectSlashStyle = true, string &$sSlashStyle = DIRECTORY_SEPARATOR): string;
+    public function correctDirPathFormat(string $sDirPath, bool $bWithFinalSlash = false, bool $bCorrectSlashStyle = true): string;
 
     /**
      * IN: 'this/is/../a/./test/.///is'

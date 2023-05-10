@@ -110,10 +110,12 @@ class AfrDirPathTest extends TestCase
             ['./dsadas/gfdgd/ffff', '/'],
             ['./dsadas/gfdgd\\ffff', '/'],
             ['\\dsadas\\gfdgd\\ffff', '\\'],
-            ['\\\\dsadas/gfdgd/ffff', '\\'],
-            ['C:\\Windows/system', '\\'],
+            ['\\\\192.168.1.2/gfdgd/ffff', '\\'],
+            ['\\\\192.168.1.2\gfdgd\ffff', '\\'],
+            ['C:\\Windows/system/fff/ff', '\\'],
             ['C:\\Windows\\system', '\\'],
-            ['/Windows\\system', '\\'],
+            ['/Windows\\system', '/'],
+            ['/Windows\\system\\', '\\'],
             ['/Windows/system', '/'],
         ];
     }
@@ -129,27 +131,6 @@ class AfrDirPathTest extends TestCase
             $sExpected,
             print_r(func_get_args(), true)
         );
-    }
-
-    function getApplicableSlashStyleDataProvider(bool $bSupressInfo = false): array
-    {
-        echo $bSupressInfo ? '' : __CLASS__ . '->' . __FUNCTION__ . PHP_EOL;
-        return $this->detectDirectorySeparatorFromPathDataProvider(true);
-    }
-
-    /**
-     * @test
-     * @dataProvider getApplicableSlashStyleDataProvider
-     */
-    public function getApplicableSlashStyleTest(string $sTestPath, string $sExpected): void
-    {
-        foreach ([$sExpected, ''] as $sDs) {
-            $this->assertSame(
-                $this->getApplicableSlashStyle($sTestPath, $sDs),
-                $sExpected,
-                print_r(func_get_args() + [$sDs], true)
-            );
-        }
     }
 
 
@@ -298,53 +279,41 @@ class AfrDirPathTest extends TestCase
 
 
 
-    function correctPathFormatTestDataProvider(): array
+    function correctDirPathFormatTestDataProvider(): array
     {
         echo __CLASS__ . '->' . __FUNCTION__ . PHP_EOL;
         $set1 = './dsadas\\gfdgd/ffff';
         $set2 = 'C:\\Windows/system';
         $set3 = __DIR__;
 
-        //$sExpected,  $sDirPathData,  $bWithFinalSlash = true, $bCorrectSlashStyle = true, &$sSlashStyle = DIRECTORY_SEPARATOR
+        //$sExpected,  $sDirPathData,  $bWithFinalSlash = true, $bCorrectSlashStyle = true
         return [
-            //0 $sExpected, $sDirPathData, $bWithFinalSlash, $bCorrectSlashStyle, $sSlashStyle
-            [DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR, true, true, DIRECTORY_SEPARATOR],
+            //0 $sExpected, $sDirPathData, $bWithFinalSlash, $bCorrectSlashStyle
             [DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR, true, true],
-            ['', DIRECTORY_SEPARATOR, false, true, DIRECTORY_SEPARATOR],
             ['', DIRECTORY_SEPARATOR, false, true],
-            ['', DIRECTORY_SEPARATOR, false, false, DIRECTORY_SEPARATOR],
             ['', DIRECTORY_SEPARATOR, false, false],
-            [DIRECTORY_SEPARATOR, '/', true, true, DIRECTORY_SEPARATOR],
-            [DIRECTORY_SEPARATOR, '/', true, true],
-            [DIRECTORY_SEPARATOR, '\\', true, true, DIRECTORY_SEPARATOR],
-            [DIRECTORY_SEPARATOR, '\\', true, true],
+            ['/', '/', true, true],
+            ['\\', '\\', true, true],
 
-            //10  $sExpected, $sDirPathData, $bWithFinalSlash, $bCorrectSlashStyle, $sSlashStyle
-            [str_replace('/', '\\', $set1) . '\\', $set1, true, true, '\\'],
+            //5  $sExpected, $sDirPathData, $bWithFinalSlash, $bCorrectSlashStyle
             [str_replace('\\', '/', $set1) . '/', $set1, true, true, '/'],
-            [str_replace('/', DIRECTORY_SEPARATOR, $set1) . DIRECTORY_SEPARATOR, $set1, true, true],
-            [str_replace('/', DIRECTORY_SEPARATOR, $set1), $set1, false, true, DIRECTORY_SEPARATOR],
-            [str_replace('/', DIRECTORY_SEPARATOR, $set1), $set1, false, true],
-            [$set1, $set1 . '/', false, false, DIRECTORY_SEPARATOR],
+            [str_replace('/', '\\', $set1), $set1.'\\\\', false, true],
             [$set1, $set1 . '/', false, false],
 
             //$set2 = 'C:\\Windows/system';
-            //17 $sExpected, $sDirPathData, $bWithFinalSlash, $bCorrectSlashStyle, $sSlashStyle
+            //8 $sExpected, $sDirPathData, $bWithFinalSlash, $bCorrectSlashStyle
             [str_replace('/', '\\', $set2) . '\\', $set2, true, true, '\\'],
             [$set2 . '\\', $set2, true, false, '/'],
-            [str_replace('/', DIRECTORY_SEPARATOR, $set2) . DIRECTORY_SEPARATOR, $set2, true, true],
-            [str_replace('/', DIRECTORY_SEPARATOR, $set2), $set2, false, true, DIRECTORY_SEPARATOR],
-            [str_replace('/', DIRECTORY_SEPARATOR, $set2), $set2, false, true],
-            [$set2, $set2 . '/', false, false, DIRECTORY_SEPARATOR],
+            [str_replace('/', '\\', $set2).'\\', $set2, true, true],
+            [str_replace('/', '\\', $set2), $set2, false, true],
             [$set2, $set2 . '/', false, false],
 
-            //24 $sExpected, $sDirPathData, $bWithFinalSlash, $bCorrectSlashStyle, $sSlashStyle
-            [str_replace('/', '\\', $set3) . '\\', $set3, true, true, '\\'],
-            [$set3 . '\\', $set3, true, false, '/'],
+            //13 $sExpected, $sDirPathData, $bWithFinalSlash, $bCorrectSlashStyle
+            [$set3 . DIRECTORY_SEPARATOR, $set3, true, true],
+            [$set3 . DIRECTORY_SEPARATOR, $set3 . '\\', true, false],
+            [$set3 . DIRECTORY_SEPARATOR, $set3 . '/', true, false],
             [str_replace('/', DIRECTORY_SEPARATOR, $set3) . DIRECTORY_SEPARATOR, $set3, true, true],
-            [str_replace('/', DIRECTORY_SEPARATOR, $set3), $set3, false, true, DIRECTORY_SEPARATOR],
             [str_replace('/', DIRECTORY_SEPARATOR, $set3), $set3, false, true],
-            [$set3, $set3 . '/', false, false, DIRECTORY_SEPARATOR],
             [$set3, $set3 . '/', false, false],
         ];
     }
@@ -352,19 +321,18 @@ class AfrDirPathTest extends TestCase
 
     /**
      * @test
-     * @dataProvider correctPathFormatTestDataProvider
+     * @dataProvider correctDirPathFormatTestDataProvider
      */
-    public function correctPathFormatTest(
+    public function correctDirPathFormatTest(
         string $sExpected,
         string $sDirPathData,
         bool   $bWithFinalSlash = true,
-        bool   $bCorrectSlashStyle = true,
-        string &$sSlashStyle = DIRECTORY_SEPARATOR
+        bool   $bCorrectSlashStyle = true
     ): void
     {
         $this->assertEquals(
             $sExpected,
-            $this->correctPathFormat($sDirPathData, $bWithFinalSlash, $bCorrectSlashStyle, $sSlashStyle),
+            $this->correctDirPathFormat($sDirPathData, $bWithFinalSlash, $bCorrectSlashStyle),
             'Fail: dirPathCorrectFormat ' . $sDirPathData . ' : ' . $sExpected . "\nParams:" . implode(';', func_get_args())
         );
     }

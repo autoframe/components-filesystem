@@ -75,7 +75,7 @@ trait AfrDirMaxFileMtimeTrait
             );
 
             if ($sPathType === 'dir') {
-                $sPath = self::$AfrDirPathInstance->correctPathFormat($sPath, true, true);
+                $sPath = self::$AfrDirPathInstance->correctDirPathFormat($sPath, true, true);
                 $rDir = self::$AfrDirPathInstance->openDir($sPath);
                 while ($sEntryName = readdir($rDir)) {
                     if ($sEntryName === '.' || $sEntryName === '..') {
