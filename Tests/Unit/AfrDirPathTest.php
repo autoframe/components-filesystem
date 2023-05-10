@@ -309,8 +309,9 @@ class AfrDirPathTest extends TestCase
             [$set2, $set2 . '/', false, false],
 
             //13 $sExpected, $sDirPathData, $bWithFinalSlash, $bCorrectSlashStyle
-            [str_replace('/', '\\', $set3) . '\\', $set3, true, true],
-            [$set3 . '\\', $set3, true, false],
+            [$set3 . DIRECTORY_SEPARATOR, $set3, true, true],
+            [$set3 . DIRECTORY_SEPARATOR, $set3 . '\\', true, false],
+            [$set3 . DIRECTORY_SEPARATOR, $set3 . '/', true, false],
             [str_replace('/', DIRECTORY_SEPARATOR, $set3) . DIRECTORY_SEPARATOR, $set3, true, true],
             [str_replace('/', DIRECTORY_SEPARATOR, $set3), $set3, false, true],
             [$set3, $set3 . '/', false, false],
