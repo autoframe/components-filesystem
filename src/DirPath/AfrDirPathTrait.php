@@ -54,64 +54,28 @@ trait AfrDirPathTrait
     }
 
     /**
-     * Detect windows network path \\192.168.. or Drive path C:\Dir
-     * @param string $sDirPath
-     * @return string
-     */
-    private function detectWinPath(string $sDirPath): string
-    {
-        if (
-            substr($sDirPath, 0, 2) === '\\\\' ||
-            substr($sDirPath,1,2)==':\\'
-        ) {
-            return '\\'; //
-        }
-        return '';
-    }
-
-    /**
      * Detect path slash style: /
      * @param string $sDirPath
      * @return string
      */
     public function detectDirectorySeparatorFromPath(string $sDirPath): string
     {
-        if($sWinPath = $this->detectWinPath($sDirPath)){
-            return $sWinPath;
-        }
-        $iUnixFound = substr_count($sDirPath, '/');
-        $iWindowsFound = substr_count($sDirPath, '\\');
-        if ($iUnixFound > $iWindowsFound) {
-            return '/';
-        } elseif ($iWindowsFound > $iUnixFound) {
+        if (
+            substr($sDirPath, 0, 2) === '\\\\' || # Detect Windows network path \\192.168.0.1\share
+            substr($sDirPath, 1, 2) == ':\\'  #Detect Windows drive path C:\Dir
+        ) {
             return '\\';
         }
-        return DIRECTORY_SEPARATOR;
-    }
 
-    /**
-     * Validate or detect a slash style from a dir path
-     * @param string $sDirPath
-     * @param string $sSlashStyleFormat
-     * @return string
-     */
-    public function getApplicableSlashStyle(string $sDirPath, string $sSlashStyleFormat = ''): string
-    {
-        if($sWinPath = $this->detectWinPath($sDirPath)){
-            return $sWinPath;
+        $iWinDs = substr_count($sDirPath, '\\');
+        $iUnixDs = substr_count($sDirPath, '/');
+        if ($iWinDs + $iUnixDs < 1) {
+            return DIRECTORY_SEPARATOR;
+        } elseif ($iWinDs > $iUnixDs) {
+            return '\\';
         }
-        if ($sSlashStyleFormat === DIRECTORY_SEPARATOR) {
-            return DIRECTORY_SEPARATOR; //we want to convert to system format, so we can skip the autodetect
-        }
-        if ($sSlashStyleFormat && !in_array($sSlashStyleFormat, ['/', '\\'])) {
-            $sSlashStyleFormat = ''; // drop wrong strings
-        }
-        if (!$sSlashStyleFormat) {
-            $sSlashStyleFormat = $this->detectDirectorySeparatorFromPath($sDirPath);
-        }
-        return $sSlashStyleFormat;
+        return '/';
     }
-
 
     /**
      * Remove final slash from a directory path
@@ -154,7 +118,7 @@ trait AfrDirPathTrait
     }
 
     /**
-     * Make the dir path to a uniform path for cross system like windows to unix and keep existing slash format
+     * Make the path for FILE and DIR to a uniform path for cross system like windows to unix and keep existing slash format
      * @param string $sDirPath
      * @return string
      */
@@ -172,20 +136,16 @@ trait AfrDirPathTrait
      * @param string $sDirPath
      * @param bool $bWithFinalSlash
      * @param bool $bCorrectSlashStyle
-     * @param string $sSlashStyle
      * @return string
      */
-    public function correctPathFormat(
+    public function correctDirPathFormat(
         string $sDirPath,
         bool   $bWithFinalSlash = false,
-        bool   $bCorrectSlashStyle = true,
-        string &$sSlashStyle = DIRECTORY_SEPARATOR
+        bool   $bCorrectSlashStyle = true
     ): string
     {
-        $sSlashStyle = $this->getApplicableSlashStyle($sDirPath, $sSlashStyle);
-        $sDirPath = $bWithFinalSlash ?
-            $this->addFinalSlash($sDirPath) :
-            $this->removeFinalSlash($sDirPath);
+        $sSlashStyle = $this->detectDirectorySeparatorFromPath($sDirPath);
+        $sDirPath = $this->removeFinalSlash($sDirPath) . ($bWithFinalSlash ? $sSlashStyle : '');
         if ($bCorrectSlashStyle) {
             $sDirPath = $this->correctSlashStyleMethod($sDirPath, $sSlashStyle);
         }
@@ -208,7 +168,7 @@ trait AfrDirPathTrait
             if ('.' === $sSegment) {
                 continue;
             }
-            if ('..' === $sSegment && count($aAbsolutes)>0) {
+            if ('..' === $sSegment && count($aAbsolutes) > 0) {
                 array_pop($aAbsolutes);
             } else {
                 $aAbsolutes[] = $sSegment;

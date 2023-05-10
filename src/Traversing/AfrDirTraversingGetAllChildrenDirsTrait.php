@@ -47,7 +47,7 @@ trait AfrDirTraversingGetAllChildrenDirsTrait
                     'Invalid directory path provided in ' . __CLASS__ . '->' . __FUNCTION__ . ': "' . $sDirPath . '"'
                 );
             }
-            $sDirPath = self::$AfrDirPathInstance->correctPathFormat($sDirPath, true, true);
+            $sDirPath = self::$AfrDirPathInstance->correctDirPathFormat($sDirPath, true, true);
         }
 
         $aDirs = $aDirsLoop = $aDirsLoopSymlink = [];
