@@ -25,6 +25,9 @@ Classes:
 
 - AfrBase64InlineDataClass
   - getBase64InlineData
+  
+- AfrOverWriteClass
+  - overWriteFile
  
 - AfrDirTraversingCollectionClass (all traversing methods)
 - AfrDirTraversingCountChildrenDirsClass
