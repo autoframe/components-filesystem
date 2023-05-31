@@ -46,7 +46,7 @@ trait AfrDirTraversingFileListTrait
             $sFilePath = $sDirPath . $sEntryName;
             if (filetype($sFilePath) === 'file') {
                 if (!empty($aFilterExtensions)) {
-                    $this->getDirFileFistFilterExtensions($aFilterExtensions, $sEntryName, $aFiles);
+                    $this->getDirFileListFilterExtensions($aFilterExtensions, $sEntryName, $aFiles);
                 } else {
                     $aFiles[] = $sEntryName;
                 }
@@ -63,7 +63,7 @@ trait AfrDirTraversingFileListTrait
      * @param string $sEntryName
      * @param array $aFiles
      */
-    private function getDirFileFistFilterExtensions(array $aFilterExtensions, string $sEntryName, array &$aFiles)
+    private function getDirFileListFilterExtensions(array $aFilterExtensions, string $sEntryName, array &$aFiles)
     {
         $sEntryNameLower = strtolower($sEntryName);
         foreach ($aFilterExtensions as $sFilterExtension) {

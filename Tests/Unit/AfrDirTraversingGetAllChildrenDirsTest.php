@@ -11,9 +11,10 @@ class AfrDirTraversingGetAllChildrenDirsTest extends TestCase
     function AfrDirTraversingGetAllChildrenDirsDataProvider(): array
     {
         echo __CLASS__ . '->' . __FUNCTION__ . PHP_EOL;
+
         $d1 = __DIR__ . DIRECTORY_SEPARATOR . '../../';
-        $d2 = __DIR__ . DIRECTORY_SEPARATOR . '../../vendor/composer/'; //without any subdirs
-        $d3 = __DIR__ . DIRECTORY_SEPARATOR . '../../vendor/';
+        $d1 = is_dir($d1 . 'vendor/') ? $d1  : $d1 . '../../../';
+        $d2 = $d1 . 'vendor/';
         return [
             [$d1, 0, false, function ($aFiles) {
                 return $aFiles === false;
@@ -21,14 +22,10 @@ class AfrDirTraversingGetAllChildrenDirsTest extends TestCase
             [$d1, 2, true, function ($aFiles) {
                 return
                     isset($aFiles['vendor']) &&
-                    isset($aFiles['Tests']) &&
                     !isset($aFiles['.']) &&
                     !isset($aFiles['..']);
             }],
-            [$d2, 2, true, function ($aFiles) {
-                return $aFiles === [];
-            }],
-            [$d3, 3, true, function ($aFiles) {
+            [$d2, 3, true, function ($aFiles) {
                 foreach ($aFiles as $lok => $l1) {
                     foreach ($l1 as $l1k => $l2) {
                         foreach ($l2 as $l2k => $l3) {
@@ -38,6 +35,7 @@ class AfrDirTraversingGetAllChildrenDirsTest extends TestCase
                 }
                 return false;
             }],
+
         ];
     }
 

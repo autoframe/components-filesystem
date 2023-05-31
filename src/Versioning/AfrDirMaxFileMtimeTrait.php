@@ -21,15 +21,16 @@ use function gettype;
 
 trait AfrDirMaxFileMtimeTrait
 {
-    /** @var AfrDirPathInterface  */
+    /** @var AfrDirPathInterface */
     public static AfrDirPathInterface $AfrDirPathInstance; //TODO workround singleton static dependncy injector hard / soft
-    //todo cred ca fac pt interfata ceva call general
 
     /**
      * @param string|array $pathStringOrPathsArray
      * @param int $iMaxSubDirs
      * @param bool $bFollowSymlinks
      * @param bool $bGetTsFromDirs
+     * @param array $aFilterExtensions ['jpg','php',''] filter images, scripts and file without extension
+     * @param array $aSkipDirs ['/var/dirToBeSkipped',] skip directory
      * @return int
      * @throws AfrFileSystemVersioningException
      * @throws AfrFileSystemDirPathException
@@ -38,14 +39,16 @@ trait AfrDirMaxFileMtimeTrait
         $pathStringOrPathsArray,
         int $iMaxSubDirs = 1,
         bool $bFollowSymlinks = false,
-        bool $bGetTsFromDirs = false
+        bool $bGetTsFromDirs = false,
+        array $aFilterExtensions = [],
+        array $aSkipDirs = []
     ): int
     {
         if ($iMaxSubDirs < 0) {
             return 0;
         }
         $iMaxTimestamp = 0;
-        if(empty(self::$AfrDirPathInstance)){
+        if (empty(self::$AfrDirPathInstance)) {
             self::$AfrDirPathInstance = new AfrDirPathClass();
         }
 
@@ -53,7 +56,7 @@ trait AfrDirMaxFileMtimeTrait
             foreach ($pathStringOrPathsArray as $sDirPath) {
                 $iMaxTimestamp = max(
                     $iMaxTimestamp,
-                    $this->getDirMaxFileMtime($sDirPath, $iMaxSubDirs, $bGetTsFromDirs, $bFollowSymlinks)
+                    $this->getDirMaxFileMtime($sDirPath, $iMaxSubDirs, $bGetTsFromDirs, $bFollowSymlinks, $aFilterExtensions, $aSkipDirs)
                 );
             }
         } elseif (is_string($pathStringOrPathsArray)) {
@@ -66,12 +69,20 @@ trait AfrDirMaxFileMtimeTrait
             $sPath = $pathStringOrPathsArray;
             $aDirs = [];
 
+            if (in_array($sPath, $aSkipDirs)) {
+                return $iMaxTimestamp;
+            }
+            foreach ($aFilterExtensions as &$sFilter) {
+                $sFilter = '.' . ltrim(strtolower($sFilter), '.');
+            }
             $sPathType = $this->getDirMaxFileMtimeProcess(
                 $sPath,
                 $iMaxTimestamp,
                 $aDirs,
                 $bFollowSymlinks,
-                $bGetTsFromDirs
+                $bGetTsFromDirs,
+                $aFilterExtensions,
+                $aSkipDirs
             );
 
             if ($sPathType === 'dir') {
@@ -86,7 +97,9 @@ trait AfrDirMaxFileMtimeTrait
                         $iMaxTimestamp,
                         $aDirs,
                         $bFollowSymlinks,
-                        $bGetTsFromDirs
+                        $bGetTsFromDirs,
+                        $aFilterExtensions,
+                        $aSkipDirs
                     );
                 }
                 closedir($rDir);
@@ -98,9 +111,12 @@ trait AfrDirMaxFileMtimeTrait
                 }
             }
             foreach ($aDirs as $sTargetDir) {
+                if (in_array($sTargetDir, $aSkipDirs)) {
+                    continue;
+                }
                 $iMaxTimestamp = max(
                     $iMaxTimestamp,
-                    $this->getDirMaxFileMtime($sTargetDir, $iMaxSubDirs - 1, $bGetTsFromDirs)
+                    $this->getDirMaxFileMtime($sTargetDir, $iMaxSubDirs - 1, $bGetTsFromDirs, $bFollowSymlinks, $aFilterExtensions, $aSkipDirs)
                 );
             }
 
@@ -128,7 +144,9 @@ trait AfrDirMaxFileMtimeTrait
         int    &$iMaxTimestamp,
         array  &$aDirs,
         bool   $bFollowSymlinks,
-        bool   $bGetTsFromDirs
+        bool   $bGetTsFromDirs,
+        array  $aFilterExtensions,
+        array  $aSkipDirs
     ): string
     {
         $sType = @filetype($sTargetDir); //check if file exists and ignore warning. This is the fastest way
@@ -137,7 +155,9 @@ trait AfrDirMaxFileMtimeTrait
             return '';
         }
         if ($sType === 'file') {
-            $iMaxTimestamp = max($iMaxTimestamp, (int)filemtime($sTargetDir));
+            if ($this->extensionMatched($aFilterExtensions, $sTargetDir)) {
+                $iMaxTimestamp = max($iMaxTimestamp, (int)filemtime($sTargetDir));
+            }
         } elseif ($sType === 'dir') {
             $aDirs[] = $sTargetDir; //keep low the open dir resource count
             if ($bGetTsFromDirs) {
@@ -154,11 +174,41 @@ trait AfrDirMaxFileMtimeTrait
                     $iMaxTimestamp,
                     $aDirs,
                     true,
-                    $bGetTsFromDirs
+                    $bGetTsFromDirs,
+                    $aFilterExtensions,
+                    $aSkipDirs
                 );
             }
         }
         return $sType;
+    }
+
+    /**
+     * @param array $aFilterExtensions
+     * @param string $sEntryName
+     * @return bool
+     */
+    private function extensionMatched(array $aFilterExtensions, string $sEntryName): bool
+    {
+        if (empty($aFilterExtensions)) {
+            return true;
+        }
+        //    foreach ($aFilterExtensions as &$sFilter) {
+        //        $sFilter = '.' . ltrim(strtolower($sFilter), '.');
+        //    }
+        $sEntryNameLower = strtolower($sEntryName);
+        foreach ($aFilterExtensions as $sFilterExtension) {
+            if ($sFilterExtension === '.') { //files without any extension
+                if (substr($sEntryName, -1, 1) === '.' || strpos($sEntryName, '.') === false) {
+                    return true; //file without extension
+                }
+                continue; //file with extension
+            }
+            if (substr($sEntryNameLower, -strlen($sFilterExtension)) === $sFilterExtension) {
+                return true; //match extension
+            }
+        }
+        return false;
     }
 
 }

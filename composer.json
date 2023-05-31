@@ -9,7 +9,7 @@
         "autoframe/components-exception": "^1.0",
         "autoframe/components-filemime": "^1.0"
     },
-    "version": "1.0.2",
+    "version": "1.0.3",
     "authors": [
         {
             "name": "Nistor Alexandru Marius",

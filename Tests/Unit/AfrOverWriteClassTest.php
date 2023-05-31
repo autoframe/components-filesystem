@@ -14,7 +14,7 @@ class AfrOverWriteClassTest extends TestCase
         return [
             ['OVERWRITTEN!' . microtime(true) . rand(1001, 3000), 5, 500, 7.2],
             ['OVERWRITTEN!' . microtime(true) . rand(30001, 60000), 30, 500, 14.1],
-            ['OVERWRITTEN!' . microtime(true) . rand(60001, 90000), 160, 500, 15],
+            ['OVERWRITTEN!', 160, 500, 15],
         ];
     }
 

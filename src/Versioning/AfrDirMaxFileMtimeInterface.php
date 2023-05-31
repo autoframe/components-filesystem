@@ -11,16 +11,20 @@ interface AfrDirMaxFileMtimeInterface
     /**
      * @param string|array $pathStringOrPathsArray
      * @param int $iMaxSubDirs
-     * @param bool $bGetTsFromDirs
      * @param bool $bFollowSymlinks
-     * @return int
+     * @param bool $bGetTsFromDirs
+     * @param array $aFilterExtensions
+     * @param array $aSkipDirs
      * @throws AfrFileSystemVersioningException
      * @throws AfrFileSystemDirPathException
+     * @return int
      */
     public function getDirMaxFileMtime(
         $pathStringOrPathsArray,
         int $iMaxSubDirs = 1,
         bool $bFollowSymlinks = false,
-        bool $bGetTsFromDirs = false
+        bool $bGetTsFromDirs = false,
+        array $aFilterExtensions = [],
+        array $aSkipDirs = []
     ): int;
 }

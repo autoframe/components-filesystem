@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace Unit;
 
-use Autoframe\Components\FileSystem\DirPath\AfrDirPathClass;
 use Autoframe\Components\FileSystem\Traversing\AfrDirTraversingFileListClass;
 use PHPUnit\Framework\TestCase;
 
@@ -13,7 +12,7 @@ class AfrDirTraversingFileListTest extends TestCase
     {
         echo __CLASS__ . '->' . __FUNCTION__ . PHP_EOL;
         $d1 = __DIR__ . DIRECTORY_SEPARATOR . '../../';
-        $d2 = __DIR__ . DIRECTORY_SEPARATOR . '../../vendor/composer/';
+        $d2 = is_dir($d1 . 'vendor/composer/') ? $d1 . 'vendor/composer/' : $d1 . '../../../vendor/composer/';
         return [
             [$d1, [], function ($aFiles) {
                 return in_array('composer.json', $aFiles);
