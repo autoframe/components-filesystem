@@ -102,7 +102,7 @@ trait AfrDirPathTrait
      * @param string $sSlashFormat
      * @return string
      */
-    private function correctSlashStyleMethod(string $sDirPath, string $sSlashFormat): string
+    protected function correctSlashStyleMethod(string $sDirPath, string $sSlashFormat): string
     {
         $aSearch = array_diff(['/', '\\'], [$sSlashFormat]);
         $iTypes = count($aSearch);
@@ -177,4 +177,23 @@ trait AfrDirPathTrait
         return implode($sDs, $aAbsolutes);
     }
 
+    /**
+     * Force path to single slash style
+     * @param string $sPath
+     * @return string
+     */
+    public function fixDs(string $sPath): string
+    {
+        if (
+            substr($sPath, 0, 2) === '\\\\' || # Detect Windows network path \\192.168.0.1\share
+            substr($sPath, 1, 2) == ':\\'  #Detect Windows drive path C:\Dir
+        ) {
+            $sFromDs = '/';
+            $sToDs = '\\';
+        } else {
+            $sFromDs = DIRECTORY_SEPARATOR === '/' ? '\\' : '/';
+            $sToDs = DIRECTORY_SEPARATOR;
+        }
+        return strtr($sPath, $sFromDs, $sToDs);
+    }
 }

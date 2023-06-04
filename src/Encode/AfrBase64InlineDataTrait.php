@@ -18,7 +18,7 @@ trait AfrBase64InlineDataTrait
      */
     public function getBase64InlineData(string $sFullImagePath): string
     {
-        $sMime = (new AfrFileMimeClass())->getMimeFromFileName($sFullImagePath);
+        $sMime = AfrFileMimeClass::getInstance()->getMimeFromFileName($sFullImagePath);
         return 'data:' . $sMime. ';base64,' . base64_encode(file_get_contents($sFullImagePath));
     }
 

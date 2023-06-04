@@ -7,7 +7,6 @@ use Autoframe\Components\FileSystem\DirPath\Exception\AfrFileSystemDirPathExcept
 
 interface AfrDirPathInterface
 {
-    const AfrDirPathInterface = 'AfrDirPathClass';
     /**
      * the call filetype()=="dir" is clearly faster than the is_dir() call
      * @param string $sDirPath
@@ -69,4 +68,11 @@ interface AfrDirPathInterface
      * @return string
      */
     public function simplifyAbsolutePath(string $sPath): string;
+
+    /**
+     * Force path to single slash style
+     * @param string $sPath
+     * @return string
+     */
+    public function fixDs(string $sPath): string;
 }

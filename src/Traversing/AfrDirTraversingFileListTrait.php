@@ -32,6 +32,7 @@ trait AfrDirTraversingFileListTrait
         array                $aFilterExtensions = []
     )
     {
+        $this->checkAfrDirPathInstance();
         if (!self::$AfrDirPathInstance->isDir($sDirPath) || !$rDir = self::$AfrDirPathInstance->openDir($sDirPath)) {
             return false;
         }
@@ -63,7 +64,7 @@ trait AfrDirTraversingFileListTrait
      * @param string $sEntryName
      * @param array $aFiles
      */
-    private function getDirFileListFilterExtensions(array $aFilterExtensions, string $sEntryName, array &$aFiles)
+    protected function getDirFileListFilterExtensions(array $aFilterExtensions, string $sEntryName, array &$aFiles)
     {
         $sEntryNameLower = strtolower($sEntryName);
         foreach ($aFilterExtensions as $sFilterExtension) {

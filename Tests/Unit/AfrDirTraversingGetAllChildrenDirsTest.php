@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 class AfrDirTraversingGetAllChildrenDirsTest extends TestCase
 {
-    function AfrDirTraversingGetAllChildrenDirsDataProvider(): array
+    public static function AfrDirTraversingGetAllChildrenDirsDataProvider(): array
     {
         echo __CLASS__ . '->' . __FUNCTION__ . PHP_EOL;
 
@@ -45,7 +45,7 @@ class AfrDirTraversingGetAllChildrenDirsTest extends TestCase
      */
     public function AfrDirTraversingGetAllChildrenDirsTest(string $sPath, int $iMaxLevels, bool $bFollowSymlinks, $Fx): void
     {
-        $oClass = new AfrDirTraversingGetAllChildrenDirsClass();
+        $oClass = AfrDirTraversingGetAllChildrenDirsClass::getInstance();
         $aFiles = $oClass->getAllChildrenDirs($sPath, $iMaxLevels, $bFollowSymlinks);
         $this->assertEquals(true, $Fx($aFiles), print_r($aFiles, true));
 

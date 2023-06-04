@@ -15,8 +15,9 @@ use Autoframe\Components\FileSystem\Versioning\AfrDirMaxFileMtimeInterface;
 use Autoframe\Components\FileSystem\Versioning\AfrDirMaxFileMtimeTrait;
 use Autoframe\Components\FileSystem\Versioning\AfrFileVersioningMtimeHashInterface;
 use Autoframe\Components\FileSystem\Versioning\AfrFileVersioningMtimeHashTrait;
+use Autoframe\DesignPatterns\Singleton\AfrSingletonAbstractClass;
 
-class AfrFileSystemCollectionClass implements
+class AfrFileSystemCollectionClass extends AfrSingletonAbstractClass implements
     AfrDirPathInterface,
     AfrBase64InlineDataInterface,
     AfrDirTraversingCollectionInterface,

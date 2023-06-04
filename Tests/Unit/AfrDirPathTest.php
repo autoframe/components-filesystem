@@ -10,11 +10,11 @@ class AfrDirPathTest extends TestCase
 {
     use AfrDirPathTrait;
 
-    private function getDirPathDefaultSeparators(): array
+    protected function getDirPathDefaultSeparators(): array
     {
         return ['\\', '/'];
     }
-    private function countSlahesPMethod(string $sTestPath): array
+    protected function countSlahesPMethod(string $sTestPath): array
     {
         $aOut = [];
         foreach ($this->getDirPathDefaultSeparators() as $sDs) {
@@ -23,7 +23,7 @@ class AfrDirPathTest extends TestCase
         return $aOut;
     }
 
-    function isDirDataProvider(): array
+    public static function isDirDataProvider(): array
     {
         echo __CLASS__ . '->' . __FUNCTION__ . PHP_EOL;
         return [
@@ -59,7 +59,7 @@ class AfrDirPathTest extends TestCase
     }
 
 
-    function openDirDataProvider(): array
+    public static function openDirDataProvider(): array
     {
         echo __CLASS__ . '->' . __FUNCTION__ . PHP_EOL;
         return [
@@ -94,9 +94,9 @@ class AfrDirPathTest extends TestCase
     }
 
 
-    function detectDirectorySeparatorFromPathDataProvider(bool $bSupressInfo = false): array
+    public static function detectDirectorySeparatorFromPathDataProvider(): array
     {
-        echo $bSupressInfo ? '' : __CLASS__ . '->' . __FUNCTION__ . PHP_EOL;
+        echo __CLASS__ . '->' . __FUNCTION__ . PHP_EOL;
         return [
             [DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR],
             ['/', '/'],
@@ -134,9 +134,9 @@ class AfrDirPathTest extends TestCase
     }
 
 
-    function addRemoveUniformPathsDataProvider(bool $bHide = false): array
+    public static function addRemoveUniformPathsDataProvider(): array
     {
-        echo $bHide ? '' : __CLASS__ . '->' . __FUNCTION__ . PHP_EOL;
+        echo __CLASS__ . '->' . __FUNCTION__ . PHP_EOL;
         return [
             ['/'],
             ['\\'],
@@ -176,11 +176,11 @@ class AfrDirPathTest extends TestCase
     }
 
 
-    function addFinalSlashDataProvider(): array
+    public static function addFinalSlashDataProvider(): array
     {
         echo __CLASS__ . '->' . __FUNCTION__ . PHP_EOL;
         $aOut = [];
-        foreach ($this->addRemoveUniformPathsDataProvider(true) as $sTestPath) {
+        foreach (self::addRemoveUniformPathsDataProvider(true) as $sTestPath) {
             $aOut[] = [$sTestPath[0]];
         }
         return $aOut;
@@ -279,7 +279,7 @@ class AfrDirPathTest extends TestCase
 
 
 
-    function correctDirPathFormatTestDataProvider(): array
+    public static function correctDirPathFormatTestDataProvider(): array
     {
         echo __CLASS__ . '->' . __FUNCTION__ . PHP_EOL;
         $set1 = './dsadas\\gfdgd/ffff';
@@ -340,7 +340,7 @@ class AfrDirPathTest extends TestCase
 
 
 
-    function simplifyAbsolutePathDataProvider(): array
+    public static function simplifyAbsolutePathDataProvider(): array
     {
         echo __CLASS__ . '->' . __FUNCTION__ . PHP_EOL;
         return [

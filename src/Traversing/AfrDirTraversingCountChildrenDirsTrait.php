@@ -21,6 +21,7 @@ trait AfrDirTraversingCountChildrenDirsTrait
     public function countAllChildrenDirs(string $sDirPath): int
     {
         $aDirs = [];
+        $this->checkAfrDirPathInstance();
         $rDir = self::$AfrDirPathInstance->openDir($sDirPath);
         while ($sEntryName = readdir($rDir)) {
             if ($sEntryName === '.' || $sEntryName === '..') {

@@ -6,24 +6,27 @@ namespace Autoframe\Components\FileSystem\Traversing;
 use Autoframe\Components\FileSystem\DirPath\AfrDirPathClass;
 use Autoframe\Components\FileSystem\DirPath\AfrDirPathInterface;
 
-trait AfrDirTraversingDependency
+trait AfrDirTraversingDependency /// TO REWRITE!!!!
 {
-    /** @var AfrDirPathInterface  */
-    public static AfrDirPathInterface $AfrDirPathInstance;
+    /** @var AfrDirPathInterface */
+    protected static AfrDirPathInterface $AfrDirPathInstance;
 
-    public function __construct(?AfrDirPathInterface $AfrDirPathInstance = null)
+    /**
+     * @param AfrDirPathInterface $AfrDirPathInstance
+     * @return void
+     */
+    public function setAfrDirPathInterface(AfrDirPathInterface $AfrDirPathInstance): void
     {
-        if(!empty($AfrDirPathInstance)){
-            self::$AfrDirPathInstance = $AfrDirPathInstance;
-        }
-        else{
-            $this->fallbackDependencyAfrDirPathInstance();
-        }
+        self::$AfrDirPathInstance = $AfrDirPathInstance;
     }
 
-    private function fallbackDependencyAfrDirPathInstance(){
+    /**
+     * @return void
+     */
+    protected function checkAfrDirPathInstance():void
+    {
         if (empty(self::$AfrDirPathInstance)) {
-            self::$AfrDirPathInstance = new AfrDirPathClass();
+            self::$AfrDirPathInstance = AfrDirPathClass::getInstance();
         }
     }
 

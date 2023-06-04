@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace Autoframe\Components\FileSystem\Traversing;
 
-class AfrDirTraversingCountChildrenDirsClass implements AfrDirTraversingCountChildrenDirsInterface
+use Autoframe\DesignPatterns\Singleton\AfrSingletonAbstractClass;
+
+class AfrDirTraversingCountChildrenDirsClass extends AfrSingletonAbstractClass implements AfrDirTraversingCountChildrenDirsInterface
 {
     use AfrDirTraversingCountChildrenDirsTrait;
 

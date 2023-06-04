@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 class AfrBase64InlineDataTest extends TestCase
 {
-    function getBase64InlineDataDataProvider(): array
+    public static function getBase64InlineDataDataProvider(): array
     {
         echo __CLASS__ . '->' . __FUNCTION__ . PHP_EOL;
         return [
@@ -24,28 +24,15 @@ class AfrBase64InlineDataTest extends TestCase
      */
     public function getBase64InlineDataTest(string $sFile, string $sExpected): void
     {
-        $sInline = (new AfrBase64InlineDataClass())->getBase64InlineData($sFile);
-    //    echo "$sFile\n$sInline\n\n";
+        $sInline = AfrBase64InlineDataClass::getInstance()->getBase64InlineData($sFile);
         $this->assertEquals($sExpected, $sInline);
-    }
-
-    function getBase64InlineOnePxDataProvider(): array
-    {
-        echo __CLASS__ . '->' . __FUNCTION__ . PHP_EOL;
-        return [
-            [
-                (new AfrBase64InlineDataClass())->getBase64InlineOnePx(),
-                'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
-            ]
-        ];
     }
 
     /**
      * @test
-     * @dataProvider getBase64InlineOnePxDataProvider
      */
-    public function getBase64InlineOnePxTest(string $sInlineData, string $sExpected): void
+    public function getBase64InlineOnePxTest(): void
     {
-        $this->assertEquals($sExpected, $sInlineData);
+        $this->assertEquals('data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==', AfrBase64InlineDataClass::getInstance()->getBase64InlineOnePx());
     }
 }

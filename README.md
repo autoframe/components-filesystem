@@ -10,7 +10,7 @@
 Namespace:
 - Autoframe\\Component\\FileSystem
 
-Classes:
+SINGLETON Classes:
 - AfrFileSystemCollectionClass (contains all the methods from the next classes)
 - AfrDirPathClass
   -  isDir
@@ -22,6 +22,7 @@ Classes:
   -  makeUniformSlashStyle
   -  correctPathFormat
   -  simplifyAbsolutePath
+  -  fixDs
 
 - AfrBase64InlineDataClass
   - getBase64InlineData
@@ -43,5 +44,5 @@ Classes:
   - fileVersioningMtimeHash
 
 Includes:
-- Traits
+- Traits (can be used for embedding into classes if the singleton is not good enough)
 - Interfaces

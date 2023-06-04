@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace Autoframe\Components\FileSystem\DirPath;
 
-class AfrDirPathClass implements AfrDirPathInterface
+use Autoframe\DesignPatterns\Singleton\AfrSingletonAbstractClass;
+
+class AfrDirPathClass extends AfrSingletonAbstractClass implements AfrDirPathInterface
 {
     use AfrDirPathTrait;
 }

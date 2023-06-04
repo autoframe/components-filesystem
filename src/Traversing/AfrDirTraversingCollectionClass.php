@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace Autoframe\Components\FileSystem\Traversing;
 
-class AfrDirTraversingCollectionClass implements AfrDirTraversingCollectionInterface
+use Autoframe\DesignPatterns\Singleton\AfrSingletonAbstractClass;
+
+class AfrDirTraversingCollectionClass extends AfrSingletonAbstractClass implements AfrDirTraversingCollectionInterface
 {
     use AfrDirTraversingCollectionTrait;
 }

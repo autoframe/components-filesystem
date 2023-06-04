@@ -41,6 +41,7 @@ trait AfrDirTraversingGetAllChildrenDirsTrait
             return false;
         }
 
+        $this->checkAfrDirPathInstance();
         if ($iCurrentLevel === 0) {
             if (!self::$AfrDirPathInstance->isDir($sDirPath)) {
                 throw new AfrFileSystemTraversingException(
@@ -66,10 +67,6 @@ trait AfrDirTraversingGetAllChildrenDirsTrait
             }
         }
         closedir($rDir);    // close directory
-
-        //if (empty($aDirsLoop) && empty($aDirsLoopSymlink)) {
-        //    return [];
-        //}
 
         $iCurrentLevel++;
         foreach ($aDirsLoop as $sEntryName) {

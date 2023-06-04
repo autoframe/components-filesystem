@@ -9,12 +9,11 @@ use PHPUnit\Framework\TestCase;
 
 class AfrDirTraversingCountChildrenDirsTest extends TestCase
 {
-    function countAllChildrenDirsDataProvider(): array
+    public static function countAllChildrenDirsDataProvider(): array
     {
         echo __CLASS__ . '->' . __FUNCTION__ . PHP_EOL;
         $d1 = __DIR__;
         $d2 = __DIR__ . DIRECTORY_SEPARATOR . '../';
-        $oTest = new AfrDirTraversingCollectionClass();
         return [
             [$d1, 0],
             [$d2, 1],
@@ -27,8 +26,7 @@ class AfrDirTraversingCountChildrenDirsTest extends TestCase
      */
     public function countAllChildrenDirsTest(string $sPath, int $iExpected): void
     {
-        $oClass = new AfrDirTraversingCountChildrenDirsClass();
-        $iFound = $oClass->countAllChildrenDirs($sPath);
+        $iFound = AfrDirTraversingCollectionClass::getInstance()->countAllChildrenDirs($sPath);
         $this->assertEquals($iExpected, $iFound, print_r($iFound, true));
     }
 

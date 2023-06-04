@@ -4,8 +4,8 @@ declare(strict_types=1);
 namespace Autoframe\Components\FileSystem\Versioning;
 
 use Autoframe\Components\FileSystem\DirPath\AfrDirPathInterface;
-use Autoframe\Components\FileSystem\DirPath\AfrDirPathClass;
 use Autoframe\Components\FileSystem\DirPath\Exception\AfrFileSystemDirPathException;
+use Autoframe\Components\FileSystem\Traversing\AfrDirTraversingDependency;
 use Autoframe\Components\FileSystem\Versioning\Exception\AfrFileSystemVersioningException;
 
 use function is_array;
@@ -21,8 +21,7 @@ use function gettype;
 
 trait AfrDirMaxFileMtimeTrait
 {
-    /** @var AfrDirPathInterface */
-    public static AfrDirPathInterface $AfrDirPathInstance; //TODO workround singleton static dependncy injector hard / soft
+    use AfrDirTraversingDependency;
 
     /**
      * @param string|array $pathStringOrPathsArray
@@ -48,9 +47,7 @@ trait AfrDirMaxFileMtimeTrait
             return 0;
         }
         $iMaxTimestamp = 0;
-        if (empty(self::$AfrDirPathInstance)) {
-            self::$AfrDirPathInstance = new AfrDirPathClass();
-        }
+        $this->checkAfrDirPathInstance();
 
         if (is_array($pathStringOrPathsArray)) {
             foreach ($pathStringOrPathsArray as $sDirPath) {
@@ -86,6 +83,7 @@ trait AfrDirMaxFileMtimeTrait
             );
 
             if ($sPathType === 'dir') {
+                $this->checkAfrDirPathInstance();
                 $sPath = self::$AfrDirPathInstance->correctDirPathFormat($sPath, true, true);
                 $rDir = self::$AfrDirPathInstance->openDir($sPath);
                 while ($sEntryName = readdir($rDir)) {
@@ -137,9 +135,11 @@ trait AfrDirMaxFileMtimeTrait
      * @param array $aDirs
      * @param bool $bFollowSymlinks
      * @param bool $bGetTsFromDirs
+     * @param array $aFilterExtensions
+     * @param array $aSkipDirs
      * @return string
      */
-    private function getDirMaxFileMtimeProcess(
+    protected function getDirMaxFileMtimeProcess(
         string $sTargetDir,
         int    &$iMaxTimestamp,
         array  &$aDirs,
@@ -188,7 +188,7 @@ trait AfrDirMaxFileMtimeTrait
      * @param string $sEntryName
      * @return bool
      */
-    private function extensionMatched(array $aFilterExtensions, string $sEntryName): bool
+    protected function extensionMatched(array $aFilterExtensions, string $sEntryName): bool
     {
         if (empty($aFilterExtensions)) {
             return true;

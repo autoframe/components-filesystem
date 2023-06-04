@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 class AfrDirMaxFileMtimeTest extends TestCase
 {
-    function getDirMaxFileMtimeProvider(): array
+    public static function getDirMaxFileMtimeProvider(): array
     {
         echo __CLASS__ . '->' . __FUNCTION__ . PHP_EOL;
         return [
@@ -49,7 +49,7 @@ class AfrDirMaxFileMtimeTest extends TestCase
      */
     public function getDirMaxFileMtimeTest($mDirPath, int $iLibWriteTime, int $iMaxSubDirs, array $aExtensions, array $aSkip): void
     {
-        $oClass = new AfrDirMaxFileMtimeClass();
+        $oClass = AfrDirMaxFileMtimeClass::getInstance();
         if (empty($aExtensions)) {
             $iMaxTs = $oClass->getDirMaxFileMtime($mDirPath, $iMaxSubDirs, false, (bool)rand(0, 1), $aExtensions, $aSkip);
             $this->assertGreaterThan($iLibWriteTime, $iMaxTs, date('Y-m-d H:i:s', $iLibWriteTime) . ' GTE? ' . date('Y-m-d H:i:s', $iMaxTs));

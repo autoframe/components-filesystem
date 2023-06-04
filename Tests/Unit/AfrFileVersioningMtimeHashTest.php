@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 class AfrFileVersioningMtimeHashTest extends TestCase
 {
-    function fileVersioningMtimeHashProvider(): array
+    public static function fileVersioningMtimeHashProvider(): array
     {
         echo __CLASS__ . '->' . __FUNCTION__ . PHP_EOL;
         return [
@@ -26,7 +26,7 @@ class AfrFileVersioningMtimeHashTest extends TestCase
      */
     public function fileVersioningMtimeHashTest(string $sFile, bool $bCanThrow): void
     {
-        $oClass = new AfrFileVersioningMtimeHashClass();
+        $oClass = AfrFileVersioningMtimeHashClass::getInstance();
         if ($bCanThrow) {
             if (!is_file($sFile)) {
                 $this->expectException(AfrFileSystemVersioningException::class);

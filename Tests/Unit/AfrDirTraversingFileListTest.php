@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 class AfrDirTraversingFileListTest extends TestCase
 {
-    function getDirFileListDataProvider(): array
+    public static function getDirFileListDataProvider(): array
     {
         echo __CLASS__ . '->' . __FUNCTION__ . PHP_EOL;
         $d1 = __DIR__ . DIRECTORY_SEPARATOR . '../../';
@@ -35,7 +35,7 @@ class AfrDirTraversingFileListTest extends TestCase
      */
     public function getDirFileListTest(string $sPath, array $aExtFilter, $Fx): void
     {
-        $oClass = new AfrDirTraversingFileListClass();
+        $oClass = AfrDirTraversingFileListClass::getInstance();
         $aFiles = $oClass->getDirFileList($sPath, $aExtFilter);
         $this->assertEquals(true, $Fx($aFiles), print_r($aFiles, true));
 
