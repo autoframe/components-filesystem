@@ -37,7 +37,7 @@ class AfrDirTraversingFileListTest extends TestCase
     {
         $oClass = AfrDirTraversingFileListClass::getInstance();
         $aFiles = $oClass->getDirFileList($sPath, $aExtFilter);
-        $this->assertEquals(true, $Fx($aFiles), print_r($aFiles, true));
+        $this->assertSame(true, $Fx($aFiles), print_r($aFiles, true));
 
     }
 

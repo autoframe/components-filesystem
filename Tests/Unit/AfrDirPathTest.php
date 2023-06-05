@@ -82,7 +82,7 @@ class AfrDirPathTest extends TestCase
     {
         $rDir = $this->openDir($sDirPath);
         $bIsOpened = is_resource($rDir);
-        $this->assertEquals(
+        $this->assertSame(
             $bIsOpened,
             $this->isDir($sDirPath),
             'Fail: openDir ' . $sDirPath
@@ -197,7 +197,7 @@ class AfrDirPathTest extends TestCase
         $sLastChr = substr($sTestPathReturn, -1, 1);
         $sLastBut1Chr = strlen($sLastChr) > 1 ? substr($sTestPathReturn, -2, 1) : '';
 
-        $this->assertEquals(
+        $this->assertSame(
             $sExpectedEndingSlash,
             $sLastChr,
             'Fail: dirPathAddFinalSlash ' . $sTestPath . ' : ' . $sTestPathReturn
@@ -330,7 +330,7 @@ class AfrDirPathTest extends TestCase
         bool   $bCorrectSlashStyle = true
     ): void
     {
-        $this->assertEquals(
+        $this->assertSame(
             $sExpected,
             $this->correctDirPathFormat($sDirPathData, $bWithFinalSlash, $bCorrectSlashStyle),
             'Fail: dirPathCorrectFormat ' . $sDirPathData . ' : ' . $sExpected . "\nParams:" . implode(';', func_get_args())
@@ -361,7 +361,7 @@ class AfrDirPathTest extends TestCase
         string $sExpected
     ): void
     {
-        $this->assertEquals(
+        $this->assertSame(
             $sExpected,
             $this->simplifyAbsolutePath($sDirPath),
             'Fail: simplifyAbsolutePath ' . $sDirPath . ' : ' . $sExpected . "\nParams:" . implode(';', func_get_args())

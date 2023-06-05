@@ -25,7 +25,7 @@ class AfrBase64InlineDataTest extends TestCase
     public function getBase64InlineDataTest(string $sFile, string $sExpected): void
     {
         $sInline = AfrBase64InlineDataClass::getInstance()->getBase64InlineData($sFile);
-        $this->assertEquals($sExpected, $sInline);
+        $this->assertSame($sExpected, $sInline);
     }
 
     /**
@@ -33,6 +33,6 @@ class AfrBase64InlineDataTest extends TestCase
      */
     public function getBase64InlineOnePxTest(): void
     {
-        $this->assertEquals('data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==', AfrBase64InlineDataClass::getInstance()->getBase64InlineOnePx());
+        $this->assertSame('data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==', AfrBase64InlineDataClass::getInstance()->getBase64InlineOnePx());
     }
 }

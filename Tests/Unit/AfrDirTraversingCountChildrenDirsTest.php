@@ -27,7 +27,7 @@ class AfrDirTraversingCountChildrenDirsTest extends TestCase
     public function countAllChildrenDirsTest(string $sPath, int $iExpected): void
     {
         $iFound = AfrDirTraversingCollectionClass::getInstance()->countAllChildrenDirs($sPath);
-        $this->assertEquals($iExpected, $iFound, print_r($iFound, true));
+        $this->assertSame($iExpected, $iFound, print_r($iFound, true));
     }
 
 

@@ -33,16 +33,16 @@ class AfrFileVersioningMtimeHashTest extends TestCase
                 $sHash = $oClass->fileVersioningMtimeHash($sFile, true);
             } else {
                 $sHash = $oClass->fileVersioningMtimeHash($sFile, true);
-                $this->assertEquals(true, strlen($sHash) > 7);
+                $this->assertSame(true, strlen($sHash) > 7);
             }
 
         } else {
             $sHash = $oClass->fileVersioningMtimeHash($sFile, false);
             if ($sHash === '0') {
                 //file was not found and zero was returned as hash without a fatal error
-                $this->assertEquals(true, true);
+                $this->assertSame(true, true);
             } else {
-                $this->assertEquals(true, strlen($sHash) > 7);
+                $this->assertSame(true, strlen($sHash) > 7);
             }
         }
 

@@ -47,7 +47,7 @@ class AfrDirTraversingGetAllChildrenDirsTest extends TestCase
     {
         $oClass = AfrDirTraversingGetAllChildrenDirsClass::getInstance();
         $aFiles = $oClass->getAllChildrenDirs($sPath, $iMaxLevels, $bFollowSymlinks);
-        $this->assertEquals(true, $Fx($aFiles), print_r($aFiles, true));
+        $this->assertSame(true, $Fx($aFiles), print_r($aFiles, true));
 
     }
 

@@ -59,8 +59,8 @@ class AfrOverWriteClassTest extends TestCase
 
         $oClass = AfrOverWriteClass::getInstance();
         $bResponse = $oClass->overWriteFile($sOverwritePath, $sData, $iMaxRetryMs, $fDeltaSleepMs);
-        $this->assertEquals(true, $bResponse);
-        $this->assertEquals($sData, file_get_contents($sOverwritePath));
+        $this->assertSame(true, $bResponse);
+        $this->assertSame($sData, file_get_contents($sOverwritePath));
         usleep($iUsleepAfter);
         //@unlink($sOverwritePath);
     }
