@@ -43,7 +43,7 @@ trait AfrOverWriteTrait
 
         $iDeltaUs = (int)ceil($fDeltaSleepMs * 1000);
         for ($i = 0; $i < $iMaxRetryMs; $i += $fDeltaSleepMs) {
-            if (!file_exists($sFilePathAlt)) {
+            if (!file_exists($sFilePathAlt) || filemtime($sFilePathAlt) < time() - ceil($iMaxRetryMs / 1000)) {
                 if (file_put_contents($sFilePathAlt, $sData) === false) {
                     @unlink($sFilePathAlt); //broken?
                 }
