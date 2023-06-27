@@ -6,7 +6,7 @@ namespace Autoframe\Components\FileSystem\Traversing;
 use Autoframe\Components\FileSystem\DirPath\AfrDirPathClass;
 use Autoframe\Components\FileSystem\DirPath\AfrDirPathInterface;
 
-trait AfrDirTraversingDependency /// TO REWRITE!!!!
+trait AfrDirTraversingDependency
 {
     /** @var AfrDirPathInterface */
     protected static AfrDirPathInterface $AfrDirPathInstance;

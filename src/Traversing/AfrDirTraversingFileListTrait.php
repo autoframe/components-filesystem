@@ -3,9 +3,7 @@ declare(strict_types=1);
 
 namespace Autoframe\Components\FileSystem\Traversing;
 
-use Autoframe\Components\FileSystem\DirPath\AfrDirPathInterface;
-use Autoframe\Components\FileSystem\DirPath\AfrDirPathClass;
-use Autoframe\Components\FileSystem\Exception\AfrFileSystemException;
+use Autoframe\Components\FileSystem\DirPath\Exception\AfrFileSystemDirPathException;
 
 use function ltrim;
 use function strtolower;
@@ -16,7 +14,6 @@ use function substr;
 use function strlen;
 use function closedir;
 
-
 trait AfrDirTraversingFileListTrait
 {
     use AfrDirTraversingDependency;
@@ -25,7 +22,7 @@ trait AfrDirTraversingFileListTrait
      * @param string $sDirPath absolute or relative path
      * @param array $aFilterExtensions ['jpg','php',''] filter images, scripts and file without extension
      * @return array|false
-     * @throws AfrFileSystemException
+     * @throws AfrFileSystemDirPathException
      */
     public function getDirFileList(
         string               $sDirPath,

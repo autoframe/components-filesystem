@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace Autoframe\Components\FileSystem\Versioning;
 
-use Autoframe\Components\FileSystem\DirPath\AfrDirPathInterface;
 use Autoframe\Components\FileSystem\DirPath\Exception\AfrFileSystemDirPathException;
 use Autoframe\Components\FileSystem\Traversing\AfrDirTraversingDependency;
 use Autoframe\Components\FileSystem\Versioning\Exception\AfrFileSystemVersioningException;
