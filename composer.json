@@ -5,12 +5,12 @@
     "license": "MIT",
     "homepage": "https://github.com/autoframe",
     "require": {
-        "php": "^7.4 || ^8.0",
+        "php": ">=7.4",
         "autoframe/components-exception": "^1.0 || ^2.0",
         "autoframe/components-filemime": "^3.0",
         "autoframe/design-patterns": "^1.0"
     },
-    "version": "2.0.3",
+    "version": "2.0.4",
     "authors": [
         {
             "name": "Nistor Alexandru Marius",

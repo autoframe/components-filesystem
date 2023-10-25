@@ -42,6 +42,8 @@ SINGLETON Classes:
   - getDirMaxFileMtime
 - AfrFileVersioningMtimeHashClass
   - fileVersioningMtimeHash
+- AfrSplitMergeClass
+  - AfrSplitMergeInterface
 
 Includes:
 - Traits (can be used for embedding into classes if the singleton is not good enough)

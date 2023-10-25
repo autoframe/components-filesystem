@@ -9,6 +9,8 @@ use Autoframe\Components\FileSystem\Encode\AfrBase64InlineDataTrait;
 use Autoframe\Components\FileSystem\Encode\AfrBase64InlineDataInterface;
 use Autoframe\Components\FileSystem\OverWrite\AfrOverWriteInterface;
 use Autoframe\Components\FileSystem\OverWrite\AfrOverWriteTrait;
+use Autoframe\Components\FileSystem\SplitMerge\AfrSplitMergeInterface;
+use Autoframe\Components\FileSystem\SplitMerge\AfrSplitMergeTrait;
 use Autoframe\Components\FileSystem\Traversing\AfrDirTraversingCollectionTrait;
 use Autoframe\Components\FileSystem\Traversing\AfrDirTraversingCollectionInterface;
 use Autoframe\Components\FileSystem\Versioning\AfrDirMaxFileMtimeInterface;
@@ -23,7 +25,8 @@ class AfrFileSystemCollectionClass extends AfrSingletonAbstractClass implements
     AfrDirTraversingCollectionInterface,
     AfrDirMaxFileMtimeInterface,
     AfrFileVersioningMtimeHashInterface,
-    AfrOverWriteInterface
+    AfrOverWriteInterface,
+    AfrSplitMergeInterface
 {
     use AfrDirPathTrait;
     use AfrBase64InlineDataTrait;
@@ -31,4 +34,5 @@ class AfrFileSystemCollectionClass extends AfrSingletonAbstractClass implements
     use AfrDirMaxFileMtimeTrait;
     use AfrFileVersioningMtimeHashTrait;
     use AfrOverWriteTrait;
+    use AfrSplitMergeTrait;
 }
