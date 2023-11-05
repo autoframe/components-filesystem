@@ -3,20 +3,27 @@ declare(strict_types=1);
 
 namespace Autoframe\Components\FileSystem\SplitMerge;
 
-use Autoframe\Components\FileSystem\Exception\AfrFileSystemException;
 use Autoframe\Components\FileSystem\SplitMerge\Exception\AfrFileSystemSplitMergeException;
 
 trait AfrSplitMergeTrait
 {
 
     /**
-     * @param string $sFullFilePath
+     * @param string $sSourceFullFilePath
      * @param int $iPartSize
      * @param bool $bOverwrite
+     * @param string $sOtherDestinationDirectoryPath
+     * @param bool $bUnlinkSource
      * @return int
      * @throws AfrFileSystemSplitMergeException
      */
-    public function split(string $sFullFilePath, int $iPartSize, bool $bOverwrite): int
+    public function split(
+        string $sSourceFullFilePath,
+        int    $iPartSize,
+        bool   $bOverwrite,
+        string $sOtherDestinationDirectoryPath = '',
+        bool   $bUnlinkSource = false
+    ): int
     {
 
         if ($iPartSize < 1) {
@@ -24,18 +31,45 @@ trait AfrSplitMergeTrait
                 'You can not split a file to zero or negative byte sizes!'
             );
         }
-        if (!$this->isFilePathSplit($sFullFilePath)) {
+        if (!$this->isFilePathSplit($sSourceFullFilePath)) {
             throw new AfrFileSystemSplitMergeException(
-                'File can not be split because it is missing: ' . $sFullFilePath
+                'File can not be split because it is missing: ' . $sSourceFullFilePath
             );
         }
-        $iFileSize = filesize($sFullFilePath);
+        $iFileSize = filesize($sSourceFullFilePath);
         $iTotalParts = max((int)ceil($iFileSize / $iPartSize), 1);
         $iExtLength = strlen((string)$iTotalParts); //pad with zero up to
 
-        $sourceStream = fopen($sFullFilePath, 'r');
+        $sSourceFullFilePath = realpath($sSourceFullFilePath);
+        if (!$sOtherDestinationDirectoryPath || realpath($sOtherDestinationDirectoryPath) === false) {
+            $sOtherDestinationDirectoryPath = pathinfo($sSourceFullFilePath)['dirname'];
+        }
+        if (!is_dir($sOtherDestinationDirectoryPath)) {
+            throw new AfrFileSystemSplitMergeException(
+                'File can not be split because destination directory is missing: ' . $sOtherDestinationDirectoryPath
+            );
+        }
+
+        $sDestinationFullFilePath = $sOtherDestinationDirectoryPath . DIRECTORY_SEPARATOR . basename($sSourceFullFilePath);
+
+        if ($iTotalParts < 2) { //TODO rename / move other folder
+            if ($sDestinationFullFilePath !== $sSourceFullFilePath) {
+                $bAction = $bUnlinkSource ?
+                    rename($sSourceFullFilePath, $sDestinationFullFilePath) :
+                    copy($sSourceFullFilePath, $sDestinationFullFilePath);
+                if (!$bAction) {
+                    throw new AfrFileSystemSplitMergeException(
+                        'File can not be splitted because into destination path: ' . $sOtherDestinationDirectoryPath
+                    );
+                }
+            }
+            return $iTotalParts;
+        }
+
+
+        $sourceStream = fopen($sSourceFullFilePath, 'r');
         for ($iCurrentPart = 1; $iCurrentPart <= $iTotalParts; $iCurrentPart++) {
-            $sNewFilePath = $this->getPadName($sFullFilePath, $iCurrentPart, $iExtLength);
+            $sNewFilePath = $this->getPadName($sDestinationFullFilePath, $iCurrentPart, $iExtLength);
 
 
             $writeStream = fopen($sNewFilePath, $bOverwrite ? 'w' : 'x');
@@ -62,12 +96,16 @@ trait AfrSplitMergeTrait
         }
         fclose($sourceStream);
         if ($bOverwrite) {
-            $sFilePathTail = $this->getPadName($sFullFilePath, $iCurrentPart, $iExtLength);
+            $sFilePathTail = $this->getPadName($sDestinationFullFilePath, $iCurrentPart, $iExtLength);
             if ($this->isFilePathSplit($sFilePathTail)) {
                 rename($sFilePathTail, $sFilePathTail . '.tail' . time());
             }
         }
-        return $iCurrentPart - 1;
+        $iCurrentPart--;
+        if ($iCurrentPart > 1 && $bUnlinkSource ) {
+            unlink($sSourceFullFilePath);
+        }
+        return $iCurrentPart;
     }
 
     protected function getPadName(string $sFullFilePath, int $iCurrentPart, int $iExtLength): string
@@ -89,22 +127,33 @@ trait AfrSplitMergeTrait
      */
     protected function isFilePathSplit($sFullFilePath): bool
     {
-        return @filetype($sFullFilePath) == 'file';
+        return @filetype($sFullFilePath) === 'file';
     }
 
     /**
      * @param string $sFirstPartPath
-     * @param string $sDestinationPath
+     * @param string $sOtherDestinationDirectoryPath
      * @param bool $bOverWriteDestination
+     * @param bool $bValidatePartList
+     * @param bool $bUnlinkSourcePartsOnSuccess
      * @return bool
-     * @throws AfrFileSystemSplitMergeException|AfrFileSystemException
+     * @throws AfrFileSystemSplitMergeException
      */
     public function merge(
         string $sFirstPartPath,
-        string $sDestinationPath,
-        bool   $bOverWriteDestination
+        string $sOtherDestinationDirectoryPath = '',
+        bool   $bOverWriteDestination = true,
+        bool   $bValidatePartList = true,
+        bool   $bUnlinkSourcePartsOnSuccess = false
     ): bool
     {
+        if (!$this->isFileFirstOfMergeShards($sFirstPartPath)) {
+            return true;
+//            throw new AfrFileSystemSplitMergeException(
+//                'Merge failed because first segment has invalid extension: ' . $sFirstPartPath . ' [' . $aPathInfo['extension'] . ']'
+//            );
+        }
+
         if (!$this->isFilePathSplit($sFirstPartPath)) {
             throw new AfrFileSystemSplitMergeException(
                 'Merge failed because first segment is missing: ' . $sFirstPartPath
@@ -114,36 +163,44 @@ trait AfrSplitMergeTrait
         foreach (['dirname', 'basename', 'extension', 'filename'] as $sKey) {
             $aPathInfo[$sKey] = $aPathInfo[$sKey] ?? '';
         }
-        $iExtensionLength = strlen($aPathInfo['extension']);
 
-        if (ltrim($aPathInfo['extension'], '0') !== '1') {
-            throw new AfrFileSystemSplitMergeException(
-                'Merge failed because first segment has invalid extension: ' . $sFirstPartPath . ' [' . $aPathInfo['extension'] . ']'
-            );
-        }
         if (strlen($aPathInfo['filename']) < 1) {
             throw new AfrFileSystemSplitMergeException(
                 'Merge failed because first segment has invalid filename: ' . $sFirstPartPath
             );
         }
 
-        if (!$sDestinationPath) {
-            $sDestinationPath = substr($sFirstPartPath, -1 - $iExtensionLength);
+        if ($sOtherDestinationDirectoryPath && is_dir($sOtherDestinationDirectoryPath)) {
+            $sDestinationFullFilePath = $sOtherDestinationDirectoryPath . DIRECTORY_SEPARATOR . $aPathInfo['filename'];
+        } else {
+            $sDestinationFullFilePath = substr($sFirstPartPath, 0, -1 - strlen($aPathInfo['extension']));
         }
-        if (!$bOverWriteDestination && $this->isFilePathSplit($sDestinationPath)) {
+
+        if (!$bOverWriteDestination && $this->isFilePathSplit($sDestinationFullFilePath)) {
             throw new AfrFileSystemSplitMergeException(
-                'File can not be merge because first segment missing: ' . $sFirstPartPath
+                'File can not be merge because file will be overwritten: ' . $sDestinationFullFilePath
             );
         }
 
-        $aParts = $this->getDirPartList($aPathInfo, $sFirstPartPath);
-        if (!$this->validatePartNumberBeforeMerge($aParts, $iExtensionLength)) {
-            return false;
+        $aParts = $this->getDirPartList($sFirstPartPath, $bValidatePartList);
+
+        $this->blindMerge($sDestinationFullFilePath, $aParts);
+        if ($bUnlinkSourcePartsOnSuccess && $bValidatePartList && count($aParts) > 1) {
+            foreach ($aParts as $sPathToUnlink) {
+                unlink($sPathToUnlink);
+            }
         }
 
-        $this->actualMerge($sDestinationPath, $aParts);
-
         return true;
+    }
+
+    /**
+     * @param string $sFullFilePath
+     * @return bool
+     */
+    public function isFileFirstOfMergeShards(string $sFullFilePath): bool
+    {
+        return ltrim(pathinfo($sFullFilePath, PATHINFO_EXTENSION), '0') === '1';
     }
 
     /**
@@ -196,17 +253,22 @@ trait AfrSplitMergeTrait
 
 
     /**
-     * @param array $aPathInfo
      * @param string $sFirstPartPath
+     * @param bool $bValidatePartList
      * @return array
-     * @throws AfrFileSystemException
+     * @throws AfrFileSystemSplitMergeException
      */
-    protected function getDirPartList(array $aPathInfo, string $sFirstPartPath): array
+    protected function getDirPartList(string $sFirstPartPath, bool $bValidatePartList = true): array
     {
         $aParts = [];
-        $iBaseNameLength = strlen($aPathInfo['basename']);
+
+        $aPathInfo = pathinfo($sFirstPartPath);
+        foreach (['dirname', 'basename', 'filename', 'extension'] as $sKey) {
+            $aPathInfo[$sKey] = $aPathInfo[$sKey] ?? '';
+        }
         $iFileNameLength = strlen($aPathInfo['filename']);
         $iDirNameLength = strlen($aPathInfo['dirname']);
+        $iExtensionLength = strlen($aPathInfo['extension']);
 
         $rDir = opendir($aPathInfo['dirname']);
         if (empty($rDir)) {
@@ -220,7 +282,7 @@ trait AfrSplitMergeTrait
                     ''
                 ) . $sDirFile;
             if (
-                strlen($sDirFile) === $iBaseNameLength &&
+                strlen($sDirFile) === strlen($aPathInfo['basename']) &&
                 substr($sDirFile, 0, $iFileNameLength) === $aPathInfo['filename'] &&
                 substr($sDirFile, $iFileNameLength, 1) === '.' &&
                 $this->isFilePathSplit($sFilePath)
@@ -230,21 +292,43 @@ trait AfrSplitMergeTrait
         }
         closedir($rDir);
         sort($aParts, SORT_NATURAL);
+
+        if ($bValidatePartList && !$this->validatePartNumberBeforeMerge($aParts, $iExtensionLength)) {
+            return [];
+        }
+
         return $aParts;
     }
 
     /**
-     * @param string $sDestinationPath
+     * @param string $sDestinationFilePath
      * @param array $aParts
      * @return void
      * @throws AfrFileSystemSplitMergeException
      */
-    protected function actualMerge(string $sDestinationPath, array $aParts): void
+    public function blindMerge(string $sDestinationFilePath, array $aParts): bool
     {
-        $destinationStream = fopen($sDestinationPath, 'w');
+        if (count($aParts) < 1) {
+            return false;
+        }
+        if (in_array($sDestinationFilePath, $aParts)) {
+            throw new AfrFileSystemSplitMergeException(
+                'Unable to merge into: ' . $sDestinationFilePath . ' because this path is found $aParts'
+            );
+        }
+        if (count($aParts) === 1) {
+            if (!rename($aParts[0], $sDestinationFilePath)) {
+                throw new AfrFileSystemSplitMergeException(
+                    'Unable to merge/rename single merge destination: ' . $sDestinationFilePath
+                );
+            }
+            return true;
+        }
+
+        $destinationStream = fopen($sDestinationFilePath, 'w');
         if (!$destinationStream) {
             throw new AfrFileSystemSplitMergeException(
-                'Unable to merge files into: ' . $sDestinationPath
+                'Unable to open for write merge destination: ' . $sDestinationFilePath
             );
         }
 
@@ -258,7 +342,7 @@ trait AfrSplitMergeTrait
             while (($sData = fread($readStream, 2048))) {
                 if (fwrite($destinationStream, $sData) === false) {
                     throw new AfrFileSystemSplitMergeException(
-                        'Unable to write data to merge file: ' . $sDestinationPath
+                        'Unable to write data to merge destination: ' . $sDestinationFilePath
                     );
                 }
             }
@@ -267,9 +351,10 @@ trait AfrSplitMergeTrait
 
         if (fclose($destinationStream) === false) {
             throw new AfrFileSystemSplitMergeException(
-                'Unable to close file: ' . $sDestinationPath
+                'Unable to write/close merge destination: ' . $sDestinationFilePath
             );
         }
+        return true;
     }
 
 }

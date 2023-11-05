@@ -16,6 +16,15 @@ class AfrSplitMergeClassTest extends TestCase
     {
         echo __CLASS__ . '->' . __FUNCTION__ . PHP_EOL;
 
+        $sLocalPath = __DIR__ . DIRECTORY_SEPARATOR . 'splitTest' . DIRECTORY_SEPARATOR . 'SplitMerge' . DIRECTORY_SEPARATOR;
+        $sLocalPathOther = $sLocalPath . 'Split-In-Other-Path';
+        if (!is_dir($sLocalPathOther)) {
+            mkdir($sLocalPathOther, 0777, true);
+        }
+        if (!file_exists($sLocalPath . '../.gitignore')) {
+            file_put_contents($sLocalPath . '../.gitignore', "SplitMerge\nCopyMerge\n");
+        }
+
         $sContents1 = '';
         $iParts = 15;
         for ($i = 0; $i < $iParts; $i++) {
@@ -25,31 +34,51 @@ class AfrSplitMergeClassTest extends TestCase
         $aTests = [];
 
         $aTests [] = [
-            __DIR__ . DIRECTORY_SEPARATOR . 'splitTest' . DIRECTORY_SEPARATOR . 'sContents1.txt',
+            $sLocalPath . 'sContents1.txt',
+            '',
             $sContents1,
             $iBytes,
             [
                 'return' => (int)ceil(strlen($sContents1) / $iBytes),
                 'filesize' => ['.10|' . $iBytes],
                 'contents' => ['.10|14'],
+                'unlinkSplitSource' => true,
+                'unlinkMergeShards' => true,
             ],
 
         ];
-
         $sContents2 = substr($sContents1, 0, 3);
         $aTests [] = [
 
-            __DIR__ . DIRECTORY_SEPARATOR . 'splitTest' . DIRECTORY_SEPARATOR . 'sContents2.txt',
+            $sLocalPath . 'sContents2.txt',
+            '',
             $sContents2,
             $iBytes,
             [
                 'return' => (int)ceil(strlen($sContents2) / $iBytes),
                 'filesize' => ['.1|' . $iBytes, '.2|1'],
                 'contents' => ['.2|2', '.1|01'],
+                'unlinkMergeShards' => false,
             ],
 
         ];
 
+        $iBytes = 55555;
+        $aTests [] = [
+            $sLocalPath . 'sContentsNotToBeSplit.txt',
+            $sLocalPathOther,
+            $sContents1,
+            $iBytes,
+            [
+                'return' => (int)ceil(strlen($sContents1) / $iBytes),
+                'filesize' => ['|' . strlen($sContents1),],
+                'contents' => ['|' . $sContents1,],
+                'unlinkSplitSource' => true,
+                'unlinkMergeShards' => true,
+
+            ],
+
+        ];
         return $aTests;
     }
 
@@ -59,6 +88,7 @@ class AfrSplitMergeClassTest extends TestCase
      */
     public function splitTest(
         string $sourcePath,
+        string $destinationDir,
         string $sTestContents,
         int    $sizeBytes,
         array  $aCheck,
@@ -66,40 +96,73 @@ class AfrSplitMergeClassTest extends TestCase
     ): void
     {
         file_put_contents($sourcePath, $sTestContents);
+        $sBasename = basename($sourcePath);
         $oSplit = AfrSplitMergeClass::getInstance();
         $this->assertSame(true, $oSplit instanceof AfrSplitMergeInterface);
-        $return = $oSplit->split($sourcePath, $sizeBytes, $bOverwrite);
+        try {
+            $iNumberOfShards = $oSplit->split(
+                $sourcePath,
+                $sizeBytes,
+                $bOverwrite,
+                $destinationDir,
+                !empty($aCheck['unlinkSplitSource'])
+            );
+        } catch (AfrFileSystemSplitMergeException $e) {
+            $this->assertSame('Not exception', get_class($e), $e->getMessage());
+            return;
+        }
+
         if (isset($aCheck['return'])) {
-            $this->assertSame($aCheck['return'], $return, 'number of split parts is wrong!');
+            $this->assertSame(
+                $aCheck['return'],
+                $iNumberOfShards,
+                'number of split parts is wrong: expected(' . $aCheck['return'] .
+                ') but received(' . $iNumberOfShards . ') ' .
+                $sourcePath
+            );
         }
         if (!empty($aCheck['filesize'])) {
             foreach ($aCheck['filesize'] as $sFilesize) {
                 $aFilesize = explode('|', $sFilesize);
-                $this->assertSame((int)$aFilesize[1], filesize($sourcePath . $aFilesize[0]), 'split size mismatch');
+                $path = $destinationDir ? ($destinationDir . '/' . $sBasename . $aFilesize[0]) : ($sourcePath . $aFilesize[0]);
+                $this->assertSame((int)$aFilesize[1], filesize($path), 'split size mismatch: ' . $path);
             }
         }
         if (!empty($aCheck['contents'])) {
             foreach ($aCheck['contents'] as $sContents) {
                 $aContents = explode('|', $sContents);
-                $this->assertSame((string)$aContents[1], file_get_contents($sourcePath . $aContents[0]), 'split contents mismatch');
+                $path = $destinationDir ? ($destinationDir . '/' . $sBasename . $aContents[0]) : ($sourcePath . $aContents[0]);
+
+                $this->assertSame((string)$aContents[1], file_get_contents($path), 'split contents mismatch: ' . $path);
             }
         }
+        $this->assertSame(empty($aCheck['unlinkSplitSource']), file_exists($sourcePath),
+            'The split source should be ' . (empty($aCheck['unlinkSplitSource']) ? 'present' : 'deleted') . ' @ ' . $sourcePath);
+
+        ////////// MERGE:
 
         $bMerged = false;
-        $sFirstExt = str_pad(
-            '1',
-            strlen($aFilesize[0]) - 1,
-            '0',
-            STR_PAD_LEFT
-        );
+        $path = ($destinationDir ? ($destinationDir . '/' . $sBasename) : $sourcePath) .
+            ($iNumberOfShards > 1 ? '.' . str_pad(
+                    '1',
+                    strlen($aFilesize[0]) - 1,
+                    '0',
+                    STR_PAD_LEFT
+                ) : '');
         try {
-            $bMerged = $oSplit->merge($sourcePath . '.' . $sFirstExt, $sourcePath, $bOverwrite);
-        } catch (AfrFileSystemSplitMergeException|AfrFileSystemException $e) {
-            $this->assertSame('No error', $e->getMessage(), $e->getMessage());
+            $eInfo = "oSplit->merge($path, $destinationDir, $bOverwrite)";
+            $bMerged = $oSplit->merge($path, $destinationDir, $bOverwrite, true, !empty($aCheck['unlinkMergeShards']));
+        } catch (AfrFileSystemSplitMergeException $e) {
+            $this->assertSame('Not exception', get_class($e), $e->getMessage() . "\n" . $eInfo);
         }
         if ($bMerged) {
-            $sMergedContents = file_get_contents($sourcePath);
+            $sMergedContents = file_get_contents(($destinationDir ? ($destinationDir . '/' . $sBasename) : $sourcePath));
             $this->assertSame($sTestContents, $sMergedContents, 'merged contents differ from original contents! ' . "\n$sTestContents\n$sMergedContents");
+
+            $this->assertSame(
+                empty($aCheck['unlinkMergeShards']),
+                file_exists($path) && !(!empty($aCheck['unlinkMergeShards']) && $iNumberOfShards < 2),
+                'The split shards should be ' . (empty($aCheck['unlinkMergeShards']) ? 'present' : 'deleted') . ' @ ' . $path);
         }
 
     }

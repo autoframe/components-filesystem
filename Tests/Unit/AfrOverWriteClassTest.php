@@ -51,7 +51,7 @@ class AfrOverWriteClassTest extends TestCase
                 exec('php ' . $execFileArgs . ' > /dev/null &');
             }
             //sleep 40 ms and wait for the file to be created with other data
-            usleep(min($iTimeoutBeforeStart, 40) * 1000);
+            usleep(min($iTimeoutBeforeStart, 150) * 1000);
         }
 
         $sOverwritePath = __DIR__ . DIRECTORY_SEPARATOR . 'AfrOverWriteClass.txt';
@@ -60,7 +60,7 @@ class AfrOverWriteClassTest extends TestCase
         $oClass = AfrOverWriteClass::getInstance();
         $bResponse = $oClass->overWriteFile($sOverwritePath, $sData, $iMaxRetryMs, $fDeltaSleepMs);
         $this->assertSame(true, $bResponse);
-        $this->assertSame($sData, file_get_contents($sOverwritePath));
+        $this->assertSame($sData, file_get_contents($sOverwritePath), 'Failed to check that ' . $sOverwritePath . ' contains the data: ' . $sData);
         usleep($iUsleepAfter);
         //@unlink($sOverwritePath);
     }
