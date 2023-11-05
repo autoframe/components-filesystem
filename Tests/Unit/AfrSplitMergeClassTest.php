@@ -141,7 +141,7 @@ class AfrSplitMergeClassTest extends TestCase
 
         ////////// MERGE:
 
-        $bMerged = false;
+        $iMerged = 0;
         $path = ($destinationDir ? ($destinationDir . '/' . $sBasename) : $sourcePath) .
             ($iNumberOfShards > 1 ? '.' . str_pad(
                     '1',
@@ -151,11 +151,11 @@ class AfrSplitMergeClassTest extends TestCase
                 ) : '');
         try {
             $eInfo = "oSplit->merge($path, $destinationDir, $bOverwrite)";
-            $bMerged = $oSplit->merge($path, $destinationDir, $bOverwrite, true, !empty($aCheck['unlinkMergeShards']));
+            $iMerged = $oSplit->merge($path, $destinationDir, $bOverwrite, true, !empty($aCheck['unlinkMergeShards']));
         } catch (AfrFileSystemSplitMergeException $e) {
             $this->assertSame('Not exception', get_class($e), $e->getMessage() . "\n" . $eInfo);
         }
-        if ($bMerged) {
+        if ($iMerged > 0) {
             $sMergedContents = file_get_contents(($destinationDir ? ($destinationDir . '/' . $sBasename) : $sourcePath));
             $this->assertSame($sTestContents, $sMergedContents, 'merged contents differ from original contents! ' . "\n$sTestContents\n$sMergedContents");
 
@@ -163,6 +163,8 @@ class AfrSplitMergeClassTest extends TestCase
                 empty($aCheck['unlinkMergeShards']),
                 file_exists($path) && !(!empty($aCheck['unlinkMergeShards']) && $iNumberOfShards < 2),
                 'The split shards should be ' . (empty($aCheck['unlinkMergeShards']) ? 'present' : 'deleted') . ' @ ' . $path);
+        } else {
+            $this->assertSame($iMerged > 0, $iMerged === 0,'expresion returned "'.$iMerged.'" when running '.$eInfo);
         }
 
     }

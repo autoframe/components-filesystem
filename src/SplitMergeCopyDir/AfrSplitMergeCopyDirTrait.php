@@ -34,88 +34,144 @@ trait AfrSplitMergeCopyDirTrait
     }
 
     /**
-     * @throws AfrFileSystemSplitMergeCopyDirException|AfrFileSystemSplitMergeException
+     * @param string $sSourceDir
+     * @param string $sDestinationDir
+     * @param int $iPartSize
+     * @param bool $bOverwriteFiles
+     * @param bool $bUnlinkSourcePartsOnSuccess
+     * @return int
+     * @throws AfrFileSystemSplitMergeCopyDirException
+     * @throws AfrFileSystemSplitMergeException
      */
     public function splitCopyDir(
         string $sSourceDir,
         string $sDestinationDir,
         int    $iPartSize,
-        bool   $bOverwriteFiles
+        bool   $bOverwriteFiles,
+        bool   $bUnlinkSourcePartsOnSuccess = false
     ): int
     {
-        $iTotalProcessed = 0;
+        return $this->prepareCopyDir(
+            __FUNCTION__,
+            $sSourceDir,
+            $sDestinationDir,
+            $iPartSize,
+            $bOverwriteFiles,
+            $bUnlinkSourcePartsOnSuccess
+        );
+    }
+
+    /**
+     * @param string $sFx
+     * @param string $sSourceDir
+     * @param string $sDestinationDir
+     * @param int $iPartSize
+     * @param bool $bOverwrite
+     * @param bool $bUnlinkSourcePartsOnSuccess
+     * @return int
+     * @throws AfrFileSystemSplitMergeCopyDirException
+     * @throws AfrFileSystemSplitMergeException
+     */
+    protected function prepareCopyDir(
+        string $sFx,
+        string $sSourceDir,
+        string $sDestinationDir,
+        int    $iPartSize,
+        bool   $bOverwrite,
+        bool   $bUnlinkSourcePartsOnSuccess = false
+    ): int
+    {
         $sRealPathSourceDir = realpath($sSourceDir);
         if ($sRealPathSourceDir === false) {
             throw new AfrFileSystemSplitMergeCopyDirException(
-                __FUNCTION__ . ' Invalid source path: ' . $sSourceDir
+                $sFx . ' Invalid source path: ' . $sSourceDir
             );
         }
-        $sRealPathDestinationDir = realpath($sDestinationDir);
+
+        $sRealPathDestinationDir = $sDestinationDir === '' ? $sRealPathSourceDir : realpath($sDestinationDir);
         if ($sRealPathDestinationDir === false) {
             throw new AfrFileSystemSplitMergeCopyDirException(
-                __FUNCTION__ . ' Invalid destination path: ' . $sDestinationDir
+                $sFx . ' Invalid destination path: ' . $sDestinationDir
             );
         }
 
-        if ($sRealPathSourceDir === $sRealPathDestinationDir) {
-            throw new AfrFileSystemSplitMergeCopyDirException(
-                __FUNCTION__ . ' The source and destination can\'t be identical: ' . $sRealPathSourceDir
-            );
+        if ($sRealPathSourceDir === $sRealPathDestinationDir && $sDestinationDir === '') {
+            $bUnlinkSourcePartsOnSuccess = true;
+//            throw new AfrFileSystemSplitMergeCopyDirException(
+//                $sFx . ' The source and destination can\'t be identical: ' . $sRealPathSourceDir
+//            );
         }
 
-        $aSources = $this->collectPathInfo($sRealPathSourceDir, __FUNCTION__);
+        $aSources = $this->collectPathInfo($sRealPathSourceDir, $sFx);
         if (count($aSources['files']) < 1) {
-            return $iTotalProcessed;
+            return 0;
         }
 
         foreach ($aSources['dirs'] as $aDirInfo) {
             $sDestDPath = $sRealPathDestinationDir . $aDirInfo['sRelativePath'];
             if (!is_dir($sDestDPath) && !mkdir($sDestDPath, $aDirInfo['iPerms'], true)) {
                 throw new AfrFileSystemSplitMergeCopyDirException(
-                    __FUNCTION__ . ' Unable to create destination path: ' . $sDestDPath
+                    $sFx . ' Unable to create destination path: ' . $sDestDPath
                 );
             }
         }
-        foreach ($aSources['files'] as $sSourceFullPath => $aFileInfo) {
-            if (@filetype($sSourceFullPath) !== 'file') {
+
+        $iTotalProcessed = 0;
+        $oSplitCopy = $this->xetAfrSplitMergeInterface();
+        foreach ($aSources['files'] as $sSourceFilePath => $aFileInfo) {
+            if (@filetype($sSourceFilePath) !== 'file') {
                 continue;
             }
+            $sDestFilePath = $sRealPathDestinationDir . $aFileInfo['sRelativePath'];
+            $sDestDirPath = substr($sDestFilePath, 0, -strlen($aFileInfo['sName']) - 1);
 
-            $iTotalProcessed++;
-            $sDestFPath = $sRealPathDestinationDir . $aFileInfo['sRelativePath'];
-            if ($aFileInfo['iSize'] <= $iPartSize) {//normal copy
-                if (!copy($sSourceFullPath, $sDestFPath)) {
-                    throw new AfrFileSystemSplitMergeCopyDirException(
-                        __FUNCTION__ . " Unable to copy file from [$sSourceFullPath] to [$sDestFPath]"
-                    );
-                }
-            } else {//split copy
-                $oSplitCopy = $this->xetAfrSplitMergeInterface();
-                $oSplitCopy->split(
-                    $sSourceFullPath,
+            if ($sFx === 'splitCopyDir') {
+                $iShards = $oSplitCopy->split(
+                    $sSourceFilePath,
                     $iPartSize,
-                    true,
-                    substr($sDestFPath, 0, -strlen($aFileInfo['sName']) - 1)
+                    $bOverwrite,
+                    $sDestDirPath,
+                    $bUnlinkSourcePartsOnSuccess
                 );
-                //$oSplitCopy->split($sSourceFullPath, $iPartSize, true, $sRealPathDestinationDir);
+                $iTotalProcessed += $iShards ? 1 : 0;
+            } elseif ($sFx === 'mergeCopyDir') {
+//                if (!$oSplitCopy->isFileFirstOfMergeShards($sSourceFilePath)) {
+//                    continue;
+//                }
+                $iProcessed = $oSplitCopy->merge(
+                    $sSourceFilePath,
+                    $sSourceDir === $sDestDirPath ? '' : $sDestDirPath,
+                    $bOverwrite,
+                    true,
+                    $bUnlinkSourcePartsOnSuccess
+                );
+                $iTotalProcessed += $iProcessed ? 1 : 0;
+            } else {
+                throw new AfrFileSystemSplitMergeCopyDirException($sFx . ' Unimplemented method!');
             }
         }
+        if ($sFx === 'mergeCopyDir' && $bUnlinkSourcePartsOnSuccess && $sDestinationDir !== '') {
+            foreach ($aSources['dirs'] as $sSourceDirPath => $aDirInfo) {
+                @rmdir($sSourceDirPath);
+            }
+        }
+
         return $iTotalProcessed;
     }
 
     /**
      * @param string $sSourceDir
-     * @param string $sPrentFn
+     * @param string $sParentFn
      * @return array
      * @throws AfrFileSystemSplitMergeCopyDirException
      */
-    protected function collectPathInfo(string $sSourceDir, string $sPrentFn): array
+    protected function collectPathInfo(string $sSourceDir, string $sParentFn): array
     {
         $aFound = ['dirs' => [], 'files' => []];
         $sRealPathSourceDir = realpath($sSourceDir);
         if ($sRealPathSourceDir === false) {
             throw new AfrFileSystemSplitMergeCopyDirException(
-                $sPrentFn ?: __FUNCTION__ . ' Invalid path: ' . $sSourceDir
+                $sParentFn ?: __FUNCTION__ . ' Invalid path: ' . $sSourceDir
             );
         }
         $aFiles = new RecursiveIteratorIterator(
@@ -147,6 +203,33 @@ trait AfrSplitMergeCopyDirTrait
         ksort($aFound['dirs'], SORT_NATURAL);
         ksort($aFound['files'], SORT_NATURAL);
         return $aFound;
+    }
+
+    /**
+     * @param string $sSourceDir
+     * @param string $sDestinationDir
+     * @param bool $bOverwriteFiles
+     * @param bool $bUnlinkSourcePartsOnSuccess
+     * @return int
+     * @throws AfrFileSystemSplitMergeCopyDirException
+     * @throws AfrFileSystemSplitMergeException
+     */
+    public function mergeCopyDir(
+        string $sSourceDir,
+        string $sDestinationDir = '',
+        bool   $bOverwriteFiles = false,
+        bool   $bUnlinkSourcePartsOnSuccess = false
+    ): int
+    {
+        return $this->prepareCopyDir(
+            __FUNCTION__,
+            $sSourceDir,
+            $sDestinationDir,
+            0,
+            $bOverwriteFiles,
+            $bUnlinkSourcePartsOnSuccess
+        );
+
     }
 
 }

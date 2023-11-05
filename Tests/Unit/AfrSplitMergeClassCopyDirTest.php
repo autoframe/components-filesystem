@@ -22,9 +22,10 @@ class AfrSplitMergeClassCopyDirTest extends TestCase
         $dirFromPath = $sDirBase . 'SplitCopyFrom';
         $dirFromPathSd = $dirFromPath . DIRECTORY_SEPARATOR . 'SubDirLvL2';
         $dirToPath = $sDirBase . 'SplitCopyTo';
+        $dirInplacePath = $sDirBase . 'SplitMergeInplace';
         $dirToMergePath = $sDirBase . 'SplitMergeTo';
 
-        foreach ([$dirFromPathSd, $dirToPath, $dirToMergePath] as $dp) {
+        foreach ([$dirFromPathSd, $dirToPath, $dirToPath . '2', $dirToMergePath, $dirToMergePath . '2', $dirInplacePath] as $dp) {
             if (!is_dir($dp)) {
                 mkdir($dp, 0777, true);
             }
@@ -46,6 +47,7 @@ class AfrSplitMergeClassCopyDirTest extends TestCase
             $dirFromPath,
             $dirToPath,
             $dirToMergePath,
+            $dirInplacePath,
             8
         ];
 
@@ -60,18 +62,48 @@ class AfrSplitMergeClassCopyDirTest extends TestCase
         string $sourceDirPath,
         string $sSplitDestinationPath,
         string $sMergeDestinationPath,
+        string $dirInplacePath,
         int    $sizeBytes
     ): void
     {
+
+        $bOverwrite = true;
         $oSplit = AfrSplitMergeCopyDirClass::getInstance();
         $this->assertSame(true, $oSplit instanceof AfrSplitMergeCopyDirInterface);
         //$return = $oSplit->split($sourcePath, $sizeBytes, $bOverwrite);
-        $this->recursiveRmDir($sSplitDestinationPath);
-        mkdir($sSplitDestinationPath, 0777, true);
-        $iFiles = $oSplit->splitCopyDir($sourceDirPath, $sSplitDestinationPath, $sizeBytes, false);
+        $iFiles = $oSplit->splitCopyDir($sourceDirPath, $sSplitDestinationPath, $sizeBytes, $bOverwrite);
         $this->assertSame(2, $iFiles);
-        //    $this->recursiveRmDir($sDestinationPath);
+        $this->dirBulkCheck($sSplitDestinationPath,true);
+
+        $oSplit->splitCopyDir($sourceDirPath, $sSplitDestinationPath . '2', $sizeBytes, $bOverwrite);
+        $this->dirBulkCheck($sSplitDestinationPath,true);
+
+        $oSplit->splitCopyDir($sourceDirPath, $dirInplacePath, $sizeBytes, $bOverwrite);
+        $this->dirBulkCheck($sSplitDestinationPath,true);
+
+
+        $oSplit->mergeCopyDir($sSplitDestinationPath, $sMergeDestinationPath, true, false);
+        $this->dirBulkCheck($sMergeDestinationPath,false);
+
+
+        $oSplit->mergeCopyDir($sSplitDestinationPath . '2', $sMergeDestinationPath . '2', true, true);
+        $this->dirBulkCheck($sMergeDestinationPath . '2',false);
+
+        $oSplit->mergeCopyDir($dirInplacePath, '', $bOverwrite, false);
+        $this->dirBulkCheck($dirInplacePath,false);
+
+        $this->recursiveRmDir(__DIR__ . DIRECTORY_SEPARATOR . 'splitTest' . DIRECTORY_SEPARATOR . 'CopyMerge' );
+
+
     }
 
+    protected function dirBulkCheck(string $sMergeDestinationPath, bool $bShards): void
+    {
+        $this->assertSame(true, file_exists($sMergeDestinationPath . '/sCopyDirL1.txt'));
+        $this->assertSame(!$bShards, file_exists($sMergeDestinationPath . '/SubDirLvL2/sCopyDirL2.txt'));
+        $this->assertSame($bShards, file_exists($sMergeDestinationPath . '/SubDirLvL2/sCopyDirL2.txt.1'));
+        $this->assertSame($bShards, file_exists($sMergeDestinationPath . '/SubDirLvL2/sCopyDirL2.txt.2'));
+        $this->assertSame($bShards, file_exists($sMergeDestinationPath . '/SubDirLvL2/sCopyDirL2.txt.3'));
+    }
 
 }

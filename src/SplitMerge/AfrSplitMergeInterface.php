@@ -30,7 +30,7 @@ interface AfrSplitMergeInterface
      * @param bool $bOverWriteDestination
      * @param bool $bValidatePartList
      * @param bool $bUnlinkSourcePartsOnSuccess
-     * @return bool
+     * @return int
      * @throws AfrFileSystemSplitMergeException
      */
     public function merge(
@@ -39,7 +39,7 @@ interface AfrSplitMergeInterface
         bool   $bOverWriteDestination = true,
         bool   $bValidatePartList = true,
         bool   $bUnlinkSourcePartsOnSuccess = false
-    ): bool;
+    ): int;
 
     /**
      * @param string $sDestinationFilePath

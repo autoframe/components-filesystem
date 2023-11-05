@@ -52,7 +52,7 @@ trait AfrSplitMergeTrait
 
         $sDestinationFullFilePath = $sOtherDestinationDirectoryPath . DIRECTORY_SEPARATOR . basename($sSourceFullFilePath);
 
-        if ($iTotalParts < 2) { //TODO rename / move other folder
+        if ($iTotalParts < 2) {
             if ($sDestinationFullFilePath !== $sSourceFullFilePath) {
                 $bAction = $bUnlinkSource ?
                     rename($sSourceFullFilePath, $sDestinationFullFilePath) :
@@ -102,7 +102,7 @@ trait AfrSplitMergeTrait
             }
         }
         $iCurrentPart--;
-        if ($iCurrentPart > 1 && $bUnlinkSource ) {
+        if ($iCurrentPart > 1 && $bUnlinkSource) {
             unlink($sSourceFullFilePath);
         }
         return $iCurrentPart;
@@ -136,7 +136,7 @@ trait AfrSplitMergeTrait
      * @param bool $bOverWriteDestination
      * @param bool $bValidatePartList
      * @param bool $bUnlinkSourcePartsOnSuccess
-     * @return bool
+     * @return int
      * @throws AfrFileSystemSplitMergeException
      */
     public function merge(
@@ -145,15 +145,8 @@ trait AfrSplitMergeTrait
         bool   $bOverWriteDestination = true,
         bool   $bValidatePartList = true,
         bool   $bUnlinkSourcePartsOnSuccess = false
-    ): bool
+    ): int
     {
-        if (!$this->isFileFirstOfMergeShards($sFirstPartPath)) {
-            return true;
-//            throw new AfrFileSystemSplitMergeException(
-//                'Merge failed because first segment has invalid extension: ' . $sFirstPartPath . ' [' . $aPathInfo['extension'] . ']'
-//            );
-        }
-
         if (!$this->isFilePathSplit($sFirstPartPath)) {
             throw new AfrFileSystemSplitMergeException(
                 'Merge failed because first segment is missing: ' . $sFirstPartPath
@@ -163,8 +156,9 @@ trait AfrSplitMergeTrait
         foreach (['dirname', 'basename', 'extension', 'filename'] as $sKey) {
             $aPathInfo[$sKey] = $aPathInfo[$sKey] ?? '';
         }
+        $bIsFileFirstOfMergeShards = $this->isFileFirstOfMergeShards($sFirstPartPath);
 
-        if (strlen($aPathInfo['filename']) < 1) {
+        if (strlen($aPathInfo['filename']) < 1 && $bIsFileFirstOfMergeShards) {
             throw new AfrFileSystemSplitMergeException(
                 'Merge failed because first segment has invalid filename: ' . $sFirstPartPath
             );
@@ -178,20 +172,65 @@ trait AfrSplitMergeTrait
 
         if (!$bOverWriteDestination && $this->isFilePathSplit($sDestinationFullFilePath)) {
             throw new AfrFileSystemSplitMergeException(
-                'File can not be merge because file will be overwritten: ' . $sDestinationFullFilePath
+                'File can not be merge because file will be overwritten: ' . $sDestinationFullFilePath . "\nFrom: $sFirstPartPath"
             );
         }
 
+        /* $aPathInfo = pathinfo($sFirstPartPath);
+         $aPathInfo['extension'] = $aPathInfo['extension'] ?? '';
+         $iExtensionLength = strlen($aPathInfo['extension']);
+         if (
+             $bValidatePartList &&
+             !$this->validatePartNumberBeforeMerge($aParts,$iExtensionLength)
+         ) {
+             $aParts = [];
+         }*/
+
         $aParts = $this->getDirPartList($sFirstPartPath, $bValidatePartList);
 
-        $this->blindMerge($sDestinationFullFilePath, $aParts);
-        if ($bUnlinkSourcePartsOnSuccess && $bValidatePartList && count($aParts) > 1) {
+        if (!$bIsFileFirstOfMergeShards) {
+//            return 1;
+//            throw new AfrFileSystemSplitMergeException(
+//                'Merge failed because first segment has invalid extension: ' . $sFirstPartPath . ' [' . $aPathInfo['extension'] . ']'
+//            );
+
+            $sDestinationFullFilePath = substr(
+                    $sDestinationFullFilePath,
+                    0,
+                    -strlen($aPathInfo['filename'])
+                ) . $aPathInfo['basename'];
+//            $aParts['$sFirstPartPath'] = $sFirstPartPath;
+//            $aParts['$sDestinationFullFilePath'] = $sDestinationFullFilePath;
+//            $aParts['$bUnlinkSourcePartsOnSuccess'] = $bUnlinkSourcePartsOnSuccess;
+//            file_put_contents($sDestinationFullFilePath . '_INFO.txt', print_r($aParts, true));
+            if (count($aParts) < 2 && $sFirstPartPath !== $sDestinationFullFilePath) {
+                $bAction = $bUnlinkSourcePartsOnSuccess ?
+                    rename($sFirstPartPath, $sDestinationFullFilePath) :
+                    copy($sFirstPartPath, $sDestinationFullFilePath);
+                if (!$bAction) {
+                    throw new AfrFileSystemSplitMergeException(
+                        'File can not be splitted because into destination path: ' . $sOtherDestinationDirectoryPath
+                    );
+                }
+            }
+            return 1;
+        }
+
+        $bBlind = $this->blindMerge($sDestinationFullFilePath, $aParts);
+        /* file_put_contents(__CLASS__.__FUNCTION__.time().rand(100,999),print_r([
+             '$sFirstPartPath'=> $sFirstPartPath ,
+             '$bValidatePartList'=> $bValidatePartList ,
+             '$sDestinationFullFilePath'=> $sDestinationFullFilePath ,
+             '$aParts'=> $aParts ,
+             '$bBlind'=> $bBlind ,
+         ],true));*/
+        if ($bBlind && $bUnlinkSourcePartsOnSuccess && $bValidatePartList && count($aParts) > 1) {
             foreach ($aParts as $sPathToUnlink) {
                 unlink($sPathToUnlink);
             }
         }
 
-        return true;
+        return $bBlind ? count($aParts) : 0;
     }
 
     /**
@@ -200,7 +239,9 @@ trait AfrSplitMergeTrait
      */
     public function isFileFirstOfMergeShards(string $sFullFilePath): bool
     {
-        return ltrim(pathinfo($sFullFilePath, PATHINFO_EXTENSION), '0') === '1';
+        return
+            ltrim(pathinfo($sFullFilePath, PATHINFO_EXTENSION), '0') === '1' &&
+            $this->isFilePathSplit(substr($sFullFilePath, 0, -1) . '2');
     }
 
     /**
@@ -293,7 +334,7 @@ trait AfrSplitMergeTrait
         closedir($rDir);
         sort($aParts, SORT_NATURAL);
 
-        if ($bValidatePartList && !$this->validatePartNumberBeforeMerge($aParts, $iExtensionLength)) {
+        if ($bValidatePartList && count($aParts) !== 1 && !$this->validatePartNumberBeforeMerge($aParts, $iExtensionLength)) {
             return [];
         }
 
