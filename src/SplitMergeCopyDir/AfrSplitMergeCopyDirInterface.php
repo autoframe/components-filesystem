@@ -25,4 +25,22 @@ interface AfrSplitMergeCopyDirInterface
         bool   $bOverwriteFiles
     ): int;
 
+    /**
+     * @param string $sSourceDir
+     * @param string $sDestinationDir
+     * @param bool $bOverwriteFiles
+     * @param bool $bUnlinkSourcePartsOnSuccess
+     * @return int
+     * @throws AfrFileSystemSplitMergeCopyDirException
+     * @throws AfrFileSystemSplitMergeException
+     */
+    public function mergeCopyDir(
+        string $sSourceDir,
+        string $sDestinationDir = '',
+        bool   $bOverwriteFiles = false,
+        bool   $bUnlinkSourcePartsOnSuccess = false
+    ): int;
+
+
+
 }

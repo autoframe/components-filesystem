@@ -44,6 +44,8 @@ SINGLETON Classes:
   - fileVersioningMtimeHash
 - AfrSplitMergeClass
   - AfrSplitMergeInterface
+- AfrSplitMergeCopyDirClass
+  - AfrSplitMergeCopyDirInterface
 
 Includes:
 - Traits (can be used for embedding into classes if the singleton is not good enough)
