@@ -183,7 +183,7 @@ trait AfrSplitMergeCopyDirTrait
         foreach ($aFiles as $oSplFileInfo) {
             $sFullFilePath = $oSplFileInfo->getRealPath();
             $sRelativePath = substr($sFullFilePath, strlen($sRealPathSourceDir));
-            if (strlen(trim($sRelativePath, '\/')) < 1) {
+            if (!$sRelativePath || strlen(trim($sRelativePath, '\/')) < 1) {
                 continue;
             }
             $bIsDir = $oSplFileInfo->isDir();
